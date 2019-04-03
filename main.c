@@ -1,5 +1,9 @@
+#define _GNU_SOURCE
+#include <string.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
+
 void printCommandPrompt()
 {
   //buffor do przechowywania ścieżki w której obecnie jest użytkownik
@@ -17,7 +21,7 @@ int readLineFromCommandPrompt()
   char *line = NULL;
   int bufsize = 64, position = 0;
   char **tokens = malloc(bufsize * sizeof(char*));
-  char *token;
+  char *token = NULL;
   read = getline(&line, &len, stdin);
   if( read == -1)
     {
@@ -30,6 +34,10 @@ int readLineFromCommandPrompt()
   {
     tokens[position] = token;
     position++;
+	if(position >= bufsize)
+	{
+		return -1;
+	}
   }
   int i=0;
   for(;i<position;i++)
