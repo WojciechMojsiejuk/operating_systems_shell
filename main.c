@@ -14,50 +14,76 @@ void printCommandPrompt()
   else
       printf("%s#", cwd);
 }
-int readLineFromCommandPrompt()
+
+//Reads line from stdin
+//Note: Function returns dynamically allocated line - it needs to be freed
+//Return value: returns NULL on failure
+char* readLineFromCommandPrompt()
 {
   ssize_t read;
   size_t len = 0;
   char *line = NULL;
-  int bufsize = 64, position = 0;
-  char **tokens = malloc(bufsize * sizeof(char*));
-  char *token = NULL;
+	//getline allocates the buffor (line*), it should be freed even if getline failed
   read = getline(&line, &len, stdin);
   if( read == -1)
     {
         perror("Unable to allocate buffer");
-        return read;
     }
-  printf("%s\n",line);
-  token = strtok(line, " \t\r\n\a");
+	return line;
+}
+
+//Splits line by space character
+//Note: Returns pointer that needs to be freed
+//Return value: returns NULL on failure
+char** getTokens(char* line)
+{
+	char* delim = " \t\r\n\a";
+  int bufsize = 64, position = 0;
+  char **tokens = malloc(bufsize * sizeof(char*));
+  char *token = NULL;
+  //printf("%s\n",line);
+  token = strtok(line, delim);
   while (token != NULL)
   {
     tokens[position] = token;
     position++;
+	//TODO: Reallocate memory here
 	if(position >= bufsize)
 	{
-		return -1;
+		fprintf(stderr, "getTokens: position out of range\n");
+		return NULL;
 	}
+	token = strtok(NULL, delim);
   }
   int i=0;
   for(;i<position;i++)
   {
-    printf("%s",tokens[i]);
+    printf("%s ",tokens[i]);
   }
-  return read;
-
+  return tokens;
 }
+
 int main()
 {
   while(1)
   {
-    printCommandPrompt();
-    int user_response = readLineFromCommandPrompt();
-    if( user_response != -1)
-      {
-        printf("Dzieki dziala");
-      }
-
+	printCommandPrompt();
+	char* userResponse = readLineFromCommandPrompt();
+	if(userResponse == NULL)
+	{
+		fprintf(stderr, "readLineFromCommandPrompt() failed\n");
+		return 1;
+	}
+	char** tokens = getTokens(userResponse);
+	if(tokens == NULL)
+	{
+		fprintf(stderr, "getTokens() failed\n");
+		return 2;
+	}
+	//
+	//Free allocated memory
+	free(tokens);
+	free(userResponse);
   }
   return 0;
 }
