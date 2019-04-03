@@ -35,7 +35,7 @@ char* readLineFromCommandPrompt()
 //Splits line by space character
 //Note: Returns pointer that needs to be freed
 //Return value: returns NULL on failure
-char** getTokens(char* line)
+char** getTokens(char* line, int *tokenCount)
 {
 	char* delim = " \t\r\n\a";
   int bufsize = 64, position = 0;
@@ -55,12 +55,35 @@ char** getTokens(char* line)
 	}
 	token = strtok(NULL, delim);
   }
+	*tokenCount = position;
   int i=0;
   for(;i<position;i++)
   {
     printf("%s ",tokens[i]);
   }
   return tokens;
+}
+
+void execute(char** command, int tokenCount)
+{
+	int i;
+	//TODO: check type of token (-, >>, | etc.) and do action
+	for(i=0;i<tokenCount;i++)
+	{
+		printf("Token number: %d\n", i+1);
+		if(command[i][0] == '-')
+		{
+			
+		}
+		else if(command[i][0] == '|')
+		{
+			
+		}
+		else
+		{
+			
+		}
+	}
 }
 
 int main()
@@ -74,13 +97,15 @@ int main()
 		fprintf(stderr, "readLineFromCommandPrompt() failed\n");
 		return 1;
 	}
-	char** tokens = getTokens(userResponse);
+	int tokenCount = 0;
+	char** tokens = getTokens(userResponse, &tokenCount);
 	if(tokens == NULL)
 	{
 		fprintf(stderr, "getTokens() failed\n");
 		return 2;
 	}
-	//
+	//Execute
+	execute(tokens, tokenCount);
 	//Free allocated memory
 	free(tokens);
 	free(userResponse);
