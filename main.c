@@ -55,35 +55,62 @@ char** getTokens(char* line, int *tokenCount)
 	}
 	token = strtok(NULL, delim);
   }
+	//Set correct tokenCount
 	*tokenCount = position;
-  int i=0;
-  for(;i<position;i++)
-  {
-    printf("%s ",tokens[i]);
-  }
+	////Add NULL value at t
+	//position++;
+	//tokens[position] = NULL;
+//  int i=0;
+//  for(;i<position;i++)
+//  {
+//    printf("%s ",tokens[i]);
+//  }
   return tokens;
 }
 
 void execute(char** command, int tokenCount)
 {
 	int i;
+	//Create table with types
+	int* tokenType = (int*)malloc(tokenCount * sizeof(int));
+	//types:
+	//pipe = 1, redirect = 2, parameter = 3, command = 4, backgroundProcess = 5
 	//TODO: check type of token (-, >>, | etc.) and do action
 	for(i=0;i<tokenCount;i++)
 	{
-		printf("Token number: %d\n", i+1);
-		if(command[i][0] == '-')
+		//Reset type
+		tokenType[i] = 0;
+		int tokenLength = strlen(command[i]);
+		//background process
+		if(i == tokenCount -1 && tokenLength == 1 && command[i][0] == '&')
 		{
-			
+			tokenType[i] = 5;
 		}
-		else if(command[i][0] == '|')
+		//Pipe
+		else if(tokenLength == 1 && command[i][0] == '|')
 		{
-			
+			tokenType[i] = 1;
 		}
+		//>>
+		else if(tokenLength == 2 && command[i][0] == '>' && command[i][1] == '>')
+		{
+			tokenType[i] = 2;
+		}
+		//command
+		//TODO:check if previous was pipe or it is first token
+		else if(i == 0 || tokenType[i-1] == 1)
+		{
+			tokenType[i] = 4;
+		}
+		//Parameter (does not have to start with -, example cat a.txt)
 		else
 		{
-			
+			tokenType[i] = 3;
 		}
+		//Print type
+		printf("%d\n", tokenType[i]);
 	}
+	free(tokenType);
 }
 
 int main()
