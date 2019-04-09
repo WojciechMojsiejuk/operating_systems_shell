@@ -130,6 +130,30 @@ void execute(char** command, int tokenCount)
 			return;
 		}
 	}
+  char** bufor = malloc(tokenCount * sizeof(char*));
+  for (i = 0; i < tokenCount; i++)
+  {
+    if (tokenType[i]==3 || tokenType[i]==4)
+    {
+        bufor[i] = command[i];
+    }
+    //printf("%s",bufor[i]);
+
+    execvp(bufor[0], &bufor[0]);
+/*
+    if i==tokenCount
+      exec
+    if tokenType==1
+      execv
+      redirect()
+    if tokenType==2
+      exec
+      doPliku
+      r
+    parameter = 3, command = 4
+    code */
+  }
+  //printf("PATH : %s\n", getenv("PATH"));
 	free(tokenType);
 }
 
@@ -158,4 +182,6 @@ int main()
 	free(userResponse);
   }
   return 0;
+  /* wait pid jeżeli & to jest wyłączony */
+
 }
