@@ -107,8 +107,28 @@ void execute(char** command, int tokenCount)
 		{
 			tokenType[i] = 3;
 		}
-		//Print type
-		printf("%d\n", tokenType[i]);
+		////Print type
+		//printf("%d\n", tokenType[i]);
+	}
+	//Check if there's a pipe
+	for(i=0;i<tokenCount;i++)
+	{
+		if(tokenType[i] == 1)
+		{
+			printf("Our shell does not support '|' yet\n");
+			free(tokenType);
+			return;
+		}
+	}
+	//Check if there's a redirect
+	for(i=0;i<tokenCount;i++)
+	{
+		if(tokenType[i] == 2)
+		{
+			printf("Our shell does not support '>>' yet\n");
+			free(tokenType);
+			return;
+		}
 	}
 	free(tokenType);
 }
