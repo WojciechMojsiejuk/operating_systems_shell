@@ -19,8 +19,40 @@ void printCommandPrompt()
       printf("%s#", cwd);
 }
 
-//Execvp (with fork) and file redirect
-void redirectToFile(char** bufor, char* fileName, int backgroundProcess)
+//Execvp (with fork), prints output to stdout
+void execToStdout(char** bufor, int backgroundProcess)
+{
+	pid_t pid;
+	/* Fork a child process. */
+	pid = fork();
+	//This is the child process.
+	if (pid == (pid_t) 0)
+	{
+		/* Replace the child process with our program. */
+		int execvpResult = execvp (bufor[0], bufor);
+		if(execvpResult == -1)
+		{
+			perror("execvp failed");
+			return;
+		}
+	}
+	//fork error handling
+	else if(pid < 0)
+	{
+		printf("Fork failed");
+		return;
+	}
+	/* This is the parent process. */
+	else
+	{
+		if(!backgroundProcess)
+			waitpid (pid, NULL, 0);
+	}
+	return;
+}
+
+//Execvp (with fork), prints output to file
+void execToFile(char** bufor, char* fileName, int backgroundProcess)
 {
 	int fds[2];
 	pid_t pid;
@@ -32,7 +64,8 @@ void redirectToFile(char** bufor, char* fileName, int backgroundProcess)
 		return;
 	}
 	/* Fork a child process. */
-	pid = fork ();
+	pid = fork();
+	/* This is the child process. Close our copy of the write end of the file descriptor. */
 	if (pid == (pid_t) 0)
 	{
 		int fd = open(fileName, O_WRONLY | O_CREAT, 0777);
@@ -42,7 +75,6 @@ void redirectToFile(char** bufor, char* fileName, int backgroundProcess)
 			return;
 		}
 		dup2(fd, 1);
-		/* This is the child process. Close our copy of the write end of the file descriptor. */
 		close (fds[1]);
 		/* Connect the read end of the pipe to standard input. */
 		dup2 (fds[0], STDIN_FILENO);
@@ -53,7 +85,7 @@ void redirectToFile(char** bufor, char* fileName, int backgroundProcess)
 			perror("execvp failed");
 			return;
 		}
-    } 
+    	}
 	//fork error handling
 	else if(pid < 0)
 	{
@@ -220,7 +252,8 @@ void execute(char** command, int tokenCount)
     parameter = 3, command = 4
     code */
   }
-	redirectToFile(bufor, "tempFile", 0);
+	execToStdout(bufor, 0);
+	execToFile(bufor, "tempFile", 0);
   //printf("PATH : %s\n", getenv("PATH"));
 	free(tokenType);
 }
