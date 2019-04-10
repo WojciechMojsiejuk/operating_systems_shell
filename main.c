@@ -94,7 +94,8 @@ char* readLineFromCommandPrompt()
   read = getline(&line, &len, stdin);
   if( read == -1)
     {
-        perror("Unable to allocate buffer");
+        perror(NULL);
+	return NULL;
     }
 	return line;
 }
@@ -205,8 +206,7 @@ void execute(char** command, int tokenCount)
         bufor[i] = command[i];
     }
     //printf("%s",bufor[i]);
-	redirectToFile(bufor, "tempFile", 0);
-    execvp(bufor[0], &bufor[0]);
+    //execvp(bufor[0], &bufor[0]);
 /*
     if i==tokenCount
       exec
@@ -220,6 +220,7 @@ void execute(char** command, int tokenCount)
     parameter = 3, command = 4
     code */
   }
+	redirectToFile(bufor, "tempFile", 0);
   //printf("PATH : %s\n", getenv("PATH"));
 	free(tokenType);
 }
@@ -232,8 +233,8 @@ int main()
 	char* userResponse = readLineFromCommandPrompt();
 	if(userResponse == NULL)
 	{
-		fprintf(stderr, "readLineFromCommandPrompt() failed\n");
-		return 1;
+		//fprintf(stderr, "readLineFromCommandPrompt() failed\n");
+		return 0;
 	}
 	int tokenCount = 0;
 	char** tokens = getTokens(userResponse, &tokenCount);
