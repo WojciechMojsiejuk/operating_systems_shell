@@ -202,7 +202,7 @@ char* readLineFromCommandPrompt()
 //Return value: returns NULL on failure
 char** getTokens(char* line, int *tokenCount)
 {
-	char* delim = " \t\r\n\a";
+	char delim[24] = " \t\r\n\a";
   int bufsize = 64, position = 0;
   char **tokens = malloc(bufsize * sizeof(char*));
   char *token = NULL;
