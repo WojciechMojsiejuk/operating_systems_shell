@@ -373,6 +373,7 @@ void execute(char** command, int tokenCount)
   int k=0; //second_buffer's index
   for (i = 0; i < tokenCount; i++)
   {
+    //fill buffers
     if (tokenType[i]==3 || tokenType[i]==4)
     {
       if(is_pipe==0 && is_redirect==0)
@@ -386,8 +387,10 @@ void execute(char** command, int tokenCount)
         k++;
       }
     }
+    //if current token is |
       if(tokenType[i]==1)
       {
+        //CASE: a|b|
         if(is_pipe==1)
         {
       		//wywolaj funkcje bo doszlismy do drugiego pipe'a
@@ -402,14 +405,19 @@ void execute(char** command, int tokenCount)
       		//DEBUG END
       		execWithRedirect(first_buffer,second_buffer,0);
         }
+        //CASE: a|B>>
         if(is_redirect==2)
         {
           execToFile(first_buffer, second_buffer[0], 0);
         }
+        //set flag to true, because pipe was found in command
         is_pipe=1;
       }
+      //if current token is >>
       else if(tokenType[i]==2)
       {
+        //CASE: a>>b|
+        //CZY POWINIEN WGL BYC UWZGLEDNIANY?
               if(is_pipe==1)
               {
       		//DEBUG CODE
@@ -430,8 +438,10 @@ void execute(char** command, int tokenCount)
               }
               is_redirect=2;
       }
+      //if we reached end of command
 	else if(tokenType[i] == 4 && i == tokenCount-1)
 	{
+          //CASE: a|b
         	if(is_pipe==1)
         	{
       			//DEBUG CODE
@@ -446,17 +456,30 @@ void execute(char** command, int tokenCount)
       			//wywolaj funkcje bo doszlismy do drugiego pipe'a
       			execWithRedirect(first_buffer,second_buffer,0);
         	}
+          //CASE a>>b
 		if(is_redirect==2)
 		{
 		  execToFile(first_buffer, second_buffer[0], 0);
 		}
+    /*
+    SUGGESTION:
+    CASE: a
+    execToStdout(first_buffer,0);
+    */
 	}
       //pipe = 1, redirect = 2, parameter = 3, command = 4, backgroundProcess = 5
     	//TODO: check type of token (-, >>, | etc.) and do action
 
   }
 	execToStdout(first_buffer, 0);
-
+  int freeMemoryIndex;
+  for(freeMemoryIndex=0;freeMemoryIndex<tokenCount;freeMemoryIndex++)
+  {
+    free(first_buffer[freeMemoryIndex]);
+    free(second_buffer[freeMemoryIndex]);
+  }
+  free(first_buffer);
+  free(second_buffer);
   //printf("PATH : %s\n", getenv("PATH"));
 	free(tokenType);
 }
@@ -472,7 +495,7 @@ int main()
   {
     homedir = getpwuid(getuid())->pw_dir;
   }
-  //printf("HOME: %s \n",homedir);
+  printf("HOME: %s \n",homedir);
 
   //read log file
   FILE *fp;
@@ -483,13 +506,19 @@ int main()
   char* pathToShellLogFile=malloc(strlen(homedir)+strlen(shellLogName)+1);
   strcpy(pathToShellLogFile,homedir);
   strcat(pathToShellLogFile,shellLogName);
-  //printf("%s",pathToShellLogFile);
-  fp = fopen(pathToShellLogFile, "rb");
+  printf("Sciezka do pliku: %s\n",pathToShellLogFile);
+  fp = fopen(pathToShellLogFile, "r+");
     if (fp == NULL)
-	{
-	printf("xd");
-	        exit(EXIT_FAILURE); //CZY TO OK?
-	}
+    {
+      printf("Creating file log...");
+      fp=fopen(pathToShellLogFile, "w+");
+      if(fp == NULL)
+      {
+        perror(pathToShellLogFile);
+        exit(EXIT_FAILURE);
+      }
+    }
+         //CZY TO OK?
 
   while ((read = getline(&line, &len, fp)) != -1)
   {
@@ -502,7 +531,7 @@ int main()
   fclose(fp);
   free(line);
 	signal(SIGQUIT, handler);
-  while(running)
+  while(1)
   {
 	printCommandPrompt();
 	char* userResponse = readLineFromCommandPrompt();
@@ -523,14 +552,14 @@ int main()
 		return 2;
 	}
 //TODO: FIX THIS
-/*  int i;
+ int i;
   printf("Otrzymane tokeny: ");
   for(i=0;i<tokenCount;i++)
     printf("%s ",tokens[i]);
   printf("\n");
-*/
+
 	//Execute
-	//execute(tokens, tokenCount);
+	execute(tokens, tokenCount);
   //add command to history queue
   if(current_queue_size(&q)==20)
   {
@@ -539,40 +568,23 @@ int main()
   }
 
   push(&q, currentCommand);
-//Log
-  /*fp = fopen(pathToShellLogFile, "a");
-    if (fp == NULL)
-        exit(EXIT_FAILURE); //CZY TO OK?
-
-  while(front(&q)!=NULL)
-  {
-    fprintf(fp,"%s",front(&q));
-    pop(&q);
-  }
-  fclose(fp);*/
 	//Free allocated memory
 	free(tokens);
 	free(userResponse);
   free(currentCommand);
   }
-	printf("Jestem tu\n");
-  /*fp = fopen(pathToShellLogFile, "w");
+
+  fp = fopen(pathToShellLogFile, "a");
     if (fp == NULL)
-	{
-	printf("xd");
-        exit(EXIT_FAILURE); //CZY TO OK?
-	}
+        exit(EXIT_FAILURE); //CZY TO OK?*/
 
   while(front(&q)!=NULL)
   {
     fprintf(fp,"%s",front(&q));
-	printf("%s", front(&q));
+    printf("%s",front(&q));
     pop(&q);
   }
-  fclose(fp);*/
-
-
-
-
+  fclose(fp);
+	printf("Jestem tu\n");
   return 0;
 }
