@@ -20,4 +20,8 @@
 	void pop(struct Queue *q);
 
 	void push(struct Queue *q, char* data);
+
+	void print_queue(struct Queue *q);
+
+	int current_queue_size(struct Queue *q);
 #endif

@@ -10,6 +10,18 @@
 #include <pwd.h>
 #include "queue.h"
 
+volatile sig_atomic_t running = 1;
+struct Queue q;
+
+void handler(int signum)
+{
+	if(signum == SIGQUIT)
+	{
+		running = 0;
+	}
+	exit(signum);
+}
+
 void printCommandPrompt()
 {
   //buffor do przechowywania ścieżki w której obecnie jest użytkownik
@@ -349,7 +361,8 @@ int main()
     homedir = getpwuid(getuid())->pw_dir;
   }
   printf("HOME: %s \n",homedir);
-  while(1)
+	signal(SIGQUIT, handler);
+  while(running)
   {
 	printCommandPrompt();
 	char* userResponse = readLineFromCommandPrompt();
@@ -365,6 +378,7 @@ int main()
 		fprintf(stderr, "getTokens() failed\n");
 		return 2;
 	}
+		print_queue(&q);
 	//Execute
 	execute(tokens, tokenCount);
 	//Free allocated memory
@@ -372,6 +386,4 @@ int main()
 	free(userResponse);
   }
   return 0;
-  /* wait pid jeżeli & to jest wyłączony */
-
 }
