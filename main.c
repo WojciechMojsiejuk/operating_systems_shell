@@ -295,7 +295,7 @@ void execute(char** command, int tokenCount)
       if(is_pipe==0 && is_redirect==0)
       {
         first_buffer[j] = command[i];
-        j++
+        j++;
       }
       else
       {
@@ -312,7 +312,7 @@ void execute(char** command, int tokenCount)
         }
         if(is_redirect==2)
         {
-          execToFile(first_buffer, second_buffer, 0);
+          execToFile(first_buffer, second_buffer[0], 0);
         }
         is_pipe==1;
       }
@@ -325,7 +325,7 @@ void execute(char** command, int tokenCount)
         }
         if(is_redirect==2)
         {
-          execToFile(first_buffer, second_buffer, 0);
+          execToFile(first_buffer, second_buffer[0], 0);
         }
         is_redirect==2;
       }
