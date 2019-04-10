@@ -10,6 +10,9 @@
 #include <pwd.h>
 #include "queue.h"
 
+//global queue
+struct Queue q;
+
 void printCommandPrompt()
 {
   //buffor do przechowywania ścieżki w której obecnie jest użytkownik
@@ -349,6 +352,10 @@ int main()
     homedir = getpwuid(getuid())->pw_dir;
   }
   printf("HOME: %s \n",homedir);
+
+  //initialize queue
+	init(&q);
+
   while(1)
   {
 	printCommandPrompt();
@@ -367,6 +374,15 @@ int main()
 	}
 	//Execute
 	execute(tokens, tokenCount);
+  //add command to history queue
+  if(current_queue_size(&q)==20)
+  {
+    //delete old history
+    pop(&q);
+  }
+  push(&q, userResponse);
+  printf("Obecna kolejka:\n");
+  print_queue(&q);
 	//Free allocated memory
 	free(tokens);
 	free(userResponse);
