@@ -62,7 +62,7 @@ void execWithRedirect(char** bufor, char** bufor2, int backgroundProcess)
 			perror("execvp failed");
 			return;
 		}
-    	}
+  }
 	//fork error handling
 	else if(pid < 0)
 	{
@@ -150,7 +150,7 @@ void execToFile(char** bufor, char* fileName, int backgroundProcess)
 			perror("execvp failed");
 			return;
 		}
-    	}
+}
 	//fork error handling
 	else if(pid < 0)
 	{
@@ -355,23 +355,46 @@ void execute(char** command, int tokenCount)
 
 int main()
 {
-  //pobranie historii poleceń
+  //initialize queue
+  init(&q);
+
+  //get user home directory
   const char *homedir;
   if ((homedir = getenv("HOME")) == NULL)
   {
     homedir = getpwuid(getuid())->pw_dir;
   }
-  printf("HOME: %s \n",homedir);
+  //printf("HOME: %s \n",homedir);
 
+  //read log file
+  FILE *fp;
+  char *line = NULL;
+  size_t len = 0;
+  ssize_t read;
+  char* shellLogName = "/shell_log";
+  char* pathToShellLogFile=malloc(strlen(homedir)+strlen(shellLogName)+1);
+  strcpy(pathToShellLogFile,homedir);
+  strcat(pathToShellLogFile,shellLogName);
+  //printf("%s",pathToShellLogFile);
+  fp = fopen(pathToShellLogFile, "w+");
+    if (fp == NULL)
+        exit(EXIT_FAILURE); //CZY TO OK?
 
-  //initialize queue
-	init(&q);
+  while ((read = getline(&line, &len, fp)) != -1)
+  {
+      //initialize queue with values from log file
+      push(&q,line);
+      printf("%s", line);
+  }
+
+  free(line);
 	signal(SIGQUIT, handler);
   while(running)
-
   {
 	printCommandPrompt();
 	char* userResponse = readLineFromCommandPrompt();
+  char* currentCommand=malloc(strlen(userResponse)+1);
+  strcpy(currentCommand,userResponse);
 	if(userResponse == NULL)
 	{
 		//fprintf(stderr, "readLineFromCommandPrompt() failed\n");
@@ -384,7 +407,13 @@ int main()
 		fprintf(stderr, "getTokens() failed\n");
 		return 2;
 	}
-		print_queue(&q);
+//TODO: FIX THIS
+/*  int i;
+  printf("Otrzymane tokeny: ");
+  for(i=0;i<tokenCount;i++)
+    printf("%s ",tokens[i]);
+  printf("\n");
+*/
 	//Execute
 	execute(tokens, tokenCount);
   //add command to history queue
@@ -393,12 +422,17 @@ int main()
     //delete old history
     pop(&q);
   }
-  push(&q, userResponse);
-  printf("Obecna kolejka:\n");
-  print_queue(&q);
+
+  push(&q, currentCommand);
 	//Free allocated memory
 	free(tokens);
 	free(userResponse);
+  free(currentCommand);
   }
+  printf("Ostatni element:\n");
+  printf("%s\n",last(&q));
+  printf("Obecna kolejka:\n");
+  print_queue(&q);
+
   return 0;
 }
