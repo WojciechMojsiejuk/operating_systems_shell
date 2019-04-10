@@ -26,6 +26,15 @@ char* front(struct Queue *q) {
   return NULL;
 }
 
+char* last(struct Queue *q)
+{
+  if(q->last != NULL)
+  {
+  	return q->last->data;
+  }
+  return NULL;
+}
+
 void pop(struct Queue *q) {
 	q->size--;
 
@@ -50,14 +59,35 @@ void push(struct Queue *q, char* data) {
 	}
 }
 
+void print_queue(struct Queue *q)
+{
+  struct Node *temp = q->front;
+  while(temp !=NULL)
+  {
+      printf("%s\n",temp->data);
+      temp=temp->next;
+  }
+}
+
+int current_queue_size(struct Queue *q)
+{
+  return q->size;
+}
+
 // Driver code.
 int main(void)
 {
 	struct Queue q;
 	init(&q);
-  char* napis = "abc";
-	push(&q, napis);
-	printf("%s\n", front(&q));
-	pop(&q);
-	printf("%s\n", front(&q));
+  char* napis1 = "abc";
+  char* napis2 = "abcd";
+  char* napis3 = "bcd";
+  char* napis4 = "aaa";
+	push(&q, napis1);
+  push(&q, napis2);
+  push(&q, napis3);
+  push(&q, napis4);
+  pop(&q);
+  print_queue(&q);
+  printf("%d",current_queue_size(&q));
 }
