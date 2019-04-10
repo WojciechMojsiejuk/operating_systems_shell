@@ -390,17 +390,17 @@ void execute(char** command, int tokenCount)
       {
         if(is_pipe==1)
         {
-		//wywolaj funkcje bo doszlismy do drugiego pipe'a
-		//DEBUG CODE
-		int j;
-		printf("DEBUG REDIRECT\n");
-		for(j=0;j<tokenCount;j++)
-		{
-			printf("1: %s", first_buffer[i]);
-			printf("2: %s", second_buffer[i]);
-		}
-		//DEBUG END
-		execWithRedirect(first_buffer,second_buffer,0);
+      		//wywolaj funkcje bo doszlismy do drugiego pipe'a
+      		//DEBUG CODE
+      		int l;
+      		printf("DEBUG REDIRECT\n");
+      		for(l=0;l<tokenCount;l++)
+      		{
+      			printf("1: %s", first_buffer[l]);
+      			printf("2: %s", second_buffer[l]);
+      		}
+      		//DEBUG END
+      		execWithRedirect(first_buffer,second_buffer,0);
         }
         if(is_redirect==2)
         {
@@ -410,41 +410,41 @@ void execute(char** command, int tokenCount)
       }
       else if(tokenType[i]==2)
       {
-        if(is_pipe==1)
-        {
-		//DEBUG CODE
-		int j;
-		printf("DEBUG REDIRECT\n");
-		for(j=0;j<tokenCount;j++)
-		{
-			printf("1: %s", first_buffer[i]);
-			printf("2: %s", second_buffer[i]);
-		}
-		//DEBUG END
-		//wywolaj funkcje bo doszlismy do drugiego pipe'a
-		execWithRedirect(first_buffer,second_buffer,0);
-        }
-        if(is_redirect==2)
-        {
-          execToFile(first_buffer, second_buffer[0], 0);
-        }
-        is_redirect=2;
+              if(is_pipe==1)
+              {
+      		//DEBUG CODE
+          int l;
+      		printf("DEBUG REDIRECT\n");
+      		for(l=0;l<tokenCount;l++)
+      		{
+      			printf("1: %s", first_buffer[l]);
+      			printf("2: %s", second_buffer[l]);
+      		}
+      		//DEBUG END
+      		//wywolaj funkcje bo doszlismy do drugiego pipe'a
+      		execWithRedirect(first_buffer,second_buffer,0);
+              }
+              if(is_redirect==2)
+              {
+                execToFile(first_buffer, second_buffer[0], 0);
+              }
+              is_redirect=2;
       }
 	else if(tokenType[i] == 4 && i == tokenCount-1)
 	{
         	if(is_pipe==1)
         	{
-			//DEBUG CODE
-			int j;
-			printf("DEBUG REDIRECT\n");
-			for(j=0;j<tokenCount;j++)
-			{
-				printf("1: %s", first_buffer[i]);
-				printf("2: %s", second_buffer[i]);
-			}
-			//DEBUG END
-			//wywolaj funkcje bo doszlismy do drugiego pipe'a
-			execWithRedirect(first_buffer,second_buffer,0);
+      			//DEBUG CODE
+      			int l;
+      			printf("DEBUG REDIRECT\n");
+      			for(l=0;l<tokenCount;l++)
+      			{
+      				printf("1: %s", first_buffer[l]);
+      				printf("2: %s", second_buffer[l]);
+      			}
+      			//DEBUG END
+      			//wywolaj funkcje bo doszlismy do drugiego pipe'a
+      			execWithRedirect(first_buffer,second_buffer,0);
         	}
 		if(is_redirect==2)
 		{
