@@ -400,6 +400,7 @@ int main()
 	if(userResponse == NULL)
 	{
 		//fprintf(stderr, "readLineFromCommandPrompt() failed\n");
+  
 		break;
 	}
 	int tokenCount = 0;
