@@ -76,6 +76,11 @@ void execWithRedirect(char** bufor, char** bufor2, int backgroundProcess)
 			printf("Fork failed");
 			return;
 		}
+<<<<<<< HEAD
+  }
+	//fork error handling
+	else if(pid < 0)
+=======
 		/* This is the parent process. */
 		else
 		{
@@ -102,6 +107,7 @@ void tempExecRedirect()
 	// Create a pipe. File descriptors for the two ends of the pipe are placed in fds.
 	int pipeResult = pipe (fds);
 	if(pipeResult == -1)
+>>>>>>> origin/Nowa
 	{
 		printf("Pipe failed\n");
 		return;
@@ -218,7 +224,7 @@ void execToFile(char** bufor, char* fileName, int backgroundProcess)
 			perror("execvp failed");
 			return;
 		}
-    	}
+}
 	//fork error handling
 	else if(pid < 0)
 	{
@@ -463,27 +469,53 @@ void execute(char** command, int tokenCount)
 
 int main()
 {
-  //pobranie historii poleceń
+  //initialize queue
+  init(&q);
+
+  //get user home directory
   const char *homedir;
   if ((homedir = getenv("HOME")) == NULL)
   {
     homedir = getpwuid(getuid())->pw_dir;
   }
-  printf("HOME: %s \n",homedir);
+  //printf("HOME: %s \n",homedir);
 
+  //read log file
+  FILE *fp;
+  char *line = NULL;
+  size_t len = 0;
+  ssize_t read;
+  char* shellLogName = "/shell_log";
+  char* pathToShellLogFile=malloc(strlen(homedir)+strlen(shellLogName)+1);
+  strcpy(pathToShellLogFile,homedir);
+  strcat(pathToShellLogFile,shellLogName);
+  //printf("%s",pathToShellLogFile);
+  fp = fopen(pathToShellLogFile, "rb");
+    if (fp == NULL)
+        exit(EXIT_FAILURE); //CZY TO OK?
 
-  //initialize queue
-	init(&q);
+  while ((read = getline(&line, &len, fp)) != -1)
+  {
+      //initialize queue with values from log file
+      push(&q,line);
+      printf("Linie z pliku: %swartość w kolejce:", line);
+      printf("%s",front(&q));
+      printf("\n Rozmiar kolejki: %d",current_queue_size(&q));
+  }
+  fclose(fp);
+  free(line);
 	signal(SIGQUIT, handler);
   while(running)
-
   {
 	printCommandPrompt();
 	char* userResponse = readLineFromCommandPrompt();
+  char* currentCommand=malloc(strlen(userResponse)+1);
+  strcpy(currentCommand,userResponse);
 	if(userResponse == NULL)
 	{
 		//fprintf(stderr, "readLineFromCommandPrompt() failed\n");
-		return 0;
+  
+		break;
 	}
 	int tokenCount = 0;
 	char** tokens = getTokens(userResponse, &tokenCount);
@@ -492,21 +524,49 @@ int main()
 		fprintf(stderr, "getTokens() failed\n");
 		return 2;
 	}
-		print_queue(&q);
+//TODO: FIX THIS
+/*  int i;
+  printf("Otrzymane tokeny: ");
+  for(i=0;i<tokenCount;i++)
+    printf("%s ",tokens[i]);
+  printf("\n");
+*/
 	//Execute
-	execute(tokens, tokenCount);
+	//execute(tokens, tokenCount);
   //add command to history queue
   if(current_queue_size(&q)==20)
   {
     //delete old history
     pop(&q);
   }
+<<<<<<< HEAD
+
+  push(&q, currentCommand);
+=======
   //push(&q, userResponse);
   //printf("Obecna kolejka:\n");
   //print_queue(&q);
+>>>>>>> origin/Nowa
 	//Free allocated memory
 	free(tokens);
 	free(userResponse);
+  free(currentCommand);
   }
+
+  fp = fopen(pathToShellLogFile, "w");
+    if (fp == NULL)
+        exit(EXIT_FAILURE); //CZY TO OK?
+
+  while(front(&q)!=NULL)
+  {
+    fprintf(fp,"%s",front(&q));
+    pop(&q);
+  }
+  fclose(fp);
+
+
+
+
+
   return 0;
 }

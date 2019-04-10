@@ -52,9 +52,9 @@ void push(struct Queue *q, char* data) {
 void print_queue(struct Queue *q)
 {
   struct Node *temp = q->front;
-  while(temp !=NULL)
+  while(temp!=NULL)
   {
-      printf("%s\n",temp->data);
+      printf("%s",temp->data);
       temp=temp->next;
   }
 }
