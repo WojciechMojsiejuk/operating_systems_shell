@@ -3,8 +3,15 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+<<<<<<< HEAD
 #include <sys/types.h>
 #include <pwd.h>
+=======
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+>>>>>>> 0ace54c9b4d271aa15727dc0feb2efc5fd9c41b3
 
 void printCommandPrompt()
 {
@@ -15,6 +22,101 @@ void printCommandPrompt()
       perror("getcwd() error");
   else
       printf("%s#", cwd);
+}
+
+//Execvp (with fork), prints output to stdout
+void execToStdout(char** bufor, int backgroundProcess)
+{
+	pid_t pid;
+	/* Fork a child process. */
+	pid = fork();
+	//This is the child process.
+	if (pid == (pid_t) 0)
+	{
+		/* Replace the child process with our program. */
+		int execvpResult = execvp (bufor[0], bufor);
+		if(execvpResult == -1)
+		{
+			perror("execvp failed");
+			return;
+		}
+	}
+	//fork error handling
+	else if(pid < 0)
+	{
+		printf("Fork failed");
+		return;
+	}
+	/* This is the parent process. */
+	else
+	{
+		if(!backgroundProcess)
+			waitpid (pid, NULL, 0);
+	}
+	return;
+}
+
+//Execvp (with fork), prints output to file
+void execToFile(char** bufor, char* fileName, int backgroundProcess)
+{
+	int fds[2];
+	pid_t pid;
+	/* Create a pipe. File descriptors for the two ends of the pipe are placed in fds. */
+	int pipeResult = pipe (fds);
+	if(pipeResult == -1)
+	{
+		printf("Pipe failed\n");
+		return;
+	}
+	/* Fork a child process. */
+	pid = fork();
+	/* This is the child process. Close our copy of the write end of the file descriptor. */
+	if (pid == (pid_t) 0)
+	{
+		int fd = open(fileName, O_WRONLY | O_CREAT, 0777);
+		if(fd == -1)
+		{
+			perror(fileName);
+			return;
+		}
+		dup2(fd, 1);
+		close (fds[1]);
+		/* Connect the read end of the pipe to standard input. */
+		dup2 (fds[0], STDIN_FILENO);
+		/* Replace the child process with our program. */
+		int execvpResult = execvp (bufor[0], bufor);
+		if(execvpResult == -1)
+		{
+			perror("execvp failed");
+			return;
+		}
+    	}
+	//fork error handling
+	else if(pid < 0)
+	{
+		printf("Fork failed");
+		return;
+	}
+	/* This is the parent process. */
+	else
+	{
+		//FILE* stream;
+		/* Close our copy of the read end of the file descriptor. */
+		close (fds[0]);
+		// /* Convert the write file descriptor to a FILE object, and write to it. */
+		// stream = fdopen (fds[1], "w");
+		// fprintf (stream, "This is a test.\n");
+		// fprintf (stream, "Hello, world.\n");
+		// fprintf (stream, "My dog has fleas.\n");
+		// fprintf (stream, "This program is great.\n");
+		// fprintf (stream, "One fish, two fish.\n");
+		// fflush (stream);
+		close (fds[1]);
+		/* Wait for the child process to finish (unless there was a & character)*/
+		if(!backgroundProcess)
+			waitpid (pid, NULL, 0);
+    }
+	return;
 }
 
 //Reads line from stdin
@@ -29,7 +131,8 @@ char* readLineFromCommandPrompt()
   read = getline(&line, &len, stdin);
   if( read == -1)
     {
-        perror("Unable to allocate buffer");
+        perror(NULL);
+	return NULL;
     }
 	return line;
 }
@@ -172,8 +275,7 @@ void execute(char** command, int tokenCount)
 
     }
     //printf("%s",bufor[i]);
-
-    execvp(bufor[0], &bufor[0]);
+    //execvp(bufor[0], &bufor[0]);
 /*
     if i==tokenCount
       exec
@@ -187,6 +289,8 @@ void execute(char** command, int tokenCount)
     parameter = 3, command = 4
     code */
   }
+	execToStdout(bufor, 0);
+	execToFile(bufor, "tempFile", 0);
   //printf("PATH : %s\n", getenv("PATH"));
 	free(tokenType);
 }
@@ -206,8 +310,8 @@ int main()
 	char* userResponse = readLineFromCommandPrompt();
 	if(userResponse == NULL)
 	{
-		fprintf(stderr, "readLineFromCommandPrompt() failed\n");
-		return 1;
+		//fprintf(stderr, "readLineFromCommandPrompt() failed\n");
+		return 0;
 	}
 	int tokenCount = 0;
 	char** tokens = getTokens(userResponse, &tokenCount);
