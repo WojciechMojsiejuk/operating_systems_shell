@@ -8,6 +8,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <pwd.h>
+#include "queue.h"
 
 void printCommandPrompt()
 {

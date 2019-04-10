@@ -1,3 +1,4 @@
+#include "queue.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -48,16 +49,4 @@ void push(struct Queue *q, char* data) {
 		q->last->next->next = NULL;
 		q->last = q->last->next;
 	}
-}
-
-// Driver code.
-int main(void)
-{
-	struct Queue q;
-	init(&q);
-  char* napis = "abc";
-	push(&q, napis);
-	printf("%s\n", front(&q));
-	pop(&q);
-	printf("%s\n", front(&q));
 }
