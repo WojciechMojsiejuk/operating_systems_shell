@@ -48,39 +48,43 @@ void execWithRedirect(char** bufor, char** bufor2, int backgroundProcess)
 		return;
 	}
 	/* Fork a child process. */
-	pid = fork();
-	/* This is the child process. Close our copy of the write end of the file descriptor. */
-	if (pid == (pid_t) 0)
+	int i;
+	for(i=0;i<2;i++)
 	{
-		close (fds[1]);
-		/* Connect the read end of the pipe to standard input. */
-		dup2 (fds[0], STDIN_FILENO);
-		/* Replace the child process with our program. */
-		int execvpResult = execvp (bufor[0], bufor);
-		if(execvpResult == -1)
+		pid = fork();
+		/* This is the child process. Close our copy of the write end of the file descriptor. */
+		if (pid == (pid_t) 0)
 		{
-			perror("execvp failed");
+			close (fds[1]);
+			/* Connect the read end of the pipe to standard input. */
+			dup2 (fds[0], STDIN_FILENO);
+			/* Replace the child process with our program. */
+			int execvpResult = execvp (bufor[0], bufor);
+			if(execvpResult == -1)
+			{
+				perror("execvp failed");
+				return;
+			}
+		}
+		//fork error handling
+		else if(pid < 0)
+		{
+			printf("Fork failed");
 			return;
 		}
-    	}
-	//fork error handling
-	else if(pid < 0)
-	{
-		printf("Fork failed");
-		return;
+		/* This is the parent process. */
+		else
+		{
+			//FILE* stream;
+			/* Close our copy of the read end of the file descriptor. */
+			close (fds[0]);
+			// /* Convert the write file descriptor to a FILE object, and write to it. */
+			close (fds[1]);
+			/* Wait for the child process to finish (unless there was a & character)*/
+			if(!backgroundProcess)
+				waitpid (pid, NULL, 0);
+		}
 	}
-	/* This is the parent process. */
-	else
-	{
-		//FILE* stream;
-		/* Close our copy of the read end of the file descriptor. */
-		close (fds[0]);
-		// /* Convert the write file descriptor to a FILE object, and write to it. */
-		close (fds[1]);
-		/* Wait for the child process to finish (unless there was a & character)*/
-		if(!backgroundProcess)
-			waitpid (pid, NULL, 0);
-    }
 	return;
 }
 
@@ -276,7 +280,7 @@ void execute(char** command, int tokenCount)
 		//printf("%d\n", tokenType[i]);
 	}
 	//Check if there's a pipe
-	for(i=0;i<tokenCount;i++)
+	/*for(i=0;i<tokenCount;i++)
 	{
 		if(tokenType[i] == 1)
 		{
@@ -284,8 +288,9 @@ void execute(char** command, int tokenCount)
 			free(tokenType);
 			return;
 		}
-	}
+	}*/
 	//Check if there's a redirect
+	/*
 	for(i=0;i<tokenCount;i++)
 	{
 		if(tokenType[i] == 2)
@@ -294,7 +299,7 @@ void execute(char** command, int tokenCount)
 			free(tokenType);
 			return;
 		}
-	}
+	}*/
   char** first_buffer = malloc(tokenCount * sizeof(char*));
   char** second_buffer = malloc(tokenCount * sizeof(char*));
   int is_pipe=0; //by default set this flag to false
@@ -321,8 +326,8 @@ void execute(char** command, int tokenCount)
       {
         if(is_pipe==1)
         {
-
-          //wywolaj funkcje bo doszlismy do drugiego pipe'a
+		//wywolaj funkcje bo doszlismy do drugiego pipe'a
+		execWithRedirect(first_buffer,second_buffer,0);
         }
         if(is_redirect==2)
         {
@@ -334,8 +339,8 @@ void execute(char** command, int tokenCount)
       {
         if(is_pipe==1)
         {
-
-          //wywolaj funkcje bo doszlismy do drugiego pipe'a
+		//wywolaj funkcje bo doszlismy do drugiego pipe'a
+		execWithRedirect(first_buffer,second_buffer,0);
         }
         if(is_redirect==2)
         {
@@ -393,9 +398,9 @@ int main()
     //delete old history
     pop(&q);
   }
-  push(&q, userResponse);
-  printf("Obecna kolejka:\n");
-  print_queue(&q);
+  //push(&q, userResponse);
+  //printf("Obecna kolejka:\n");
+  //print_queue(&q);
 	//Free allocated memory
 	free(tokens);
 	free(userResponse);
