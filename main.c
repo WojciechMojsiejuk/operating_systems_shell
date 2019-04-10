@@ -569,9 +569,16 @@ int main()
 
   push(&q, currentCommand);
 	//Free allocated memory
+  //HELP: https://stackoverflow.com/questions/13148119/what-does-pointer-being-freed-was-not-allocated-mean-exactly
+  int freeTokensIndex;
+  for(freeTokensIndex=0;freeTokensIndex<tokenCount;freeTokensIndex++)
+  {
+    free(tokens[freeTokensIndex]);
+  }
 	free(tokens);
 	free(userResponse);
   free(currentCommand);
+
   }
 
   fp = fopen(pathToShellLogFile, "a");
