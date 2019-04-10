@@ -76,11 +76,6 @@ void execWithRedirect(char** bufor, char** bufor2, int backgroundProcess)
 			printf("Fork failed");
 			return;
 		}
-<<<<<<< HEAD
-  }
-	//fork error handling
-	else if(pid < 0)
-=======
 		/* This is the parent process. */
 		else
 		{
@@ -107,7 +102,6 @@ void tempExecRedirect()
 	// Create a pipe. File descriptors for the two ends of the pipe are placed in fds.
 	int pipeResult = pipe (fds);
 	if(pipeResult == -1)
->>>>>>> origin/Nowa
 	{
 		printf("Pipe failed\n");
 		return;
@@ -514,7 +508,7 @@ int main()
 	if(userResponse == NULL)
 	{
 		//fprintf(stderr, "readLineFromCommandPrompt() failed\n");
-  
+
 		break;
 	}
 	int tokenCount = 0;
@@ -539,14 +533,8 @@ int main()
     //delete old history
     pop(&q);
   }
-<<<<<<< HEAD
 
   push(&q, currentCommand);
-=======
-  //push(&q, userResponse);
-  //printf("Obecna kolejka:\n");
-  //print_queue(&q);
->>>>>>> origin/Nowa
 	//Free allocated memory
 	free(tokens);
 	free(userResponse);
