@@ -3,10 +3,8 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
+
+#include <pwd.h>
 
 void printCommandPrompt()
 {
@@ -280,36 +278,73 @@ void execute(char** command, int tokenCount)
 			return;
 		}
 	}
-  char** bufor = malloc(tokenCount * sizeof(char*));
+  char** first_buffer = malloc(tokenCount * sizeof(char*));
+  char** second_buffer = malloc(tokenCount * sizeof(char*));
+  int is_pipe=0; //by default set this flag to false
+  int is_redirect=0;  //by default set this flag to false
+  int is_background_process=0; //by default set this flag to false
+  int j=0; //first_buffer's index
+  int k=0; //second_buffer's index
   for (i = 0; i < tokenCount; i++)
   {
     if (tokenType[i]==3 || tokenType[i]==4)
     {
-        bufor[i] = command[i];
+      if(is_pipe==0 && is_redirect==0)
+      {
+        first_buffer[j] = command[i];
+        j++
+      }
+      else
+      {
+        second_buffer[k]=command[i];
+        k++;
+      }
     }
-    //printf("%s",bufor[i]);
-    //execvp(bufor[0], &bufor[0]);
-/*
-    if i==tokenCount
-      exec
-    if tokenType==1
-      execv
-      redirect()
-    if tokenType==2
-      exec
-      doPliku
-      r
-    parameter = 3, command = 4
-    code */
+      if(tokenType[i]==1)
+      {
+        if(is_pipe==1)
+        {
+
+          //wywolaj funkcje bo doszlismy do drugiego pipe'a
+        }
+        if(is_redirect==2)
+        {
+          execToFile(first_buffer, second_buffer, 0);
+        }
+        is_pipe==1;
+      }
+      if(tokenType[i]==2)
+      {
+        if(is_pipe==1)
+        {
+
+          //wywolaj funkcje bo doszlismy do drugiego pipe'a
+        }
+        if(is_redirect==2)
+        {
+          execToFile(first_buffer, second_buffer, 0);
+        }
+        is_redirect==2;
+      }
+      //pipe = 1, redirect = 2, parameter = 3, command = 4, backgroundProcess = 5
+    	//TODO: check type of token (-, >>, | etc.) and do action
+
   }
-	execToStdout(bufor, 0);
-	execToFile(bufor, "tempFile", 0);
+	execToStdout(first_buffer, 0);
+
   //printf("PATH : %s\n", getenv("PATH"));
 	free(tokenType);
 }
 
 int main()
 {
+  //pobranie historii poleceń
+  const char *homedir;
+  if ((homedir = getenv("HOME")) == NULL)
+  {
+    homedir = getpwuid(getuid())->pw_dir;
+  }
+  printf("HOME: %s \n",homedir);
   while(1)
   {
 	printCommandPrompt();
