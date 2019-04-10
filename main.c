@@ -499,18 +499,19 @@ int main()
   fclose(fp);
   free(line);
 	signal(SIGQUIT, handler);
-  while(running)
+  while(1)
   {
 	printCommandPrompt();
 	char* userResponse = readLineFromCommandPrompt();
-  char* currentCommand=malloc(strlen(userResponse)+1);
-  strcpy(currentCommand,userResponse);
 	if(userResponse == NULL)
 	{
 		//fprintf(stderr, "readLineFromCommandPrompt() failed\n");
-
+		//printf("EOF?\n");
 		break;
 	}
+  char* currentCommand=malloc(strlen(userResponse)+1);
+  strcpy(currentCommand,userResponse);
+
 	int tokenCount = 0;
 	char** tokens = getTokens(userResponse, &tokenCount);
 	if(tokens == NULL)
@@ -540,7 +541,7 @@ int main()
 	free(userResponse);
   free(currentCommand);
   }
-
+/*
   fp = fopen(pathToShellLogFile, "w");
     if (fp == NULL)
         exit(EXIT_FAILURE); //CZY TO OK?
@@ -550,7 +551,7 @@ int main()
     fprintf(fp,"%s",front(&q));
     pop(&q);
   }
-  fclose(fp);
+  fclose(fp);*/
 
 
 
