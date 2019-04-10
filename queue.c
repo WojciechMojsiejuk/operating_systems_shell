@@ -2,17 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct Node {
-	char* data;
-	struct Node *next;
-};
-
-struct Queue {
-	struct Node *front;
-	struct Node *last;
-	unsigned int size;
-};
-
 void init(struct Queue *q) {
 	q->front = NULL;
 	q->last = NULL;
