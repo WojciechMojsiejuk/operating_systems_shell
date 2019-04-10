@@ -376,7 +376,7 @@ int main()
   strcpy(pathToShellLogFile,homedir);
   strcat(pathToShellLogFile,shellLogName);
   //printf("%s",pathToShellLogFile);
-  fp = fopen(pathToShellLogFile, "w+");
+  fp = fopen(pathToShellLogFile, "rb");
     if (fp == NULL)
         exit(EXIT_FAILURE); //CZY TO OK?
 
@@ -384,9 +384,11 @@ int main()
   {
       //initialize queue with values from log file
       push(&q,line);
-      printf("%s", line);
+      printf("Linie z pliku: %swartość w kolejce:", line);
+      printf("%s",front(&q));
+      printf("\n Rozmiar kolejki: %d",current_queue_size(&q));
   }
-
+  fclose(fp);
   free(line);
 	signal(SIGQUIT, handler);
   while(running)
@@ -398,7 +400,7 @@ int main()
 	if(userResponse == NULL)
 	{
 		//fprintf(stderr, "readLineFromCommandPrompt() failed\n");
-		return 0;
+		break;
 	}
 	int tokenCount = 0;
 	char** tokens = getTokens(userResponse, &tokenCount);
@@ -415,7 +417,7 @@ int main()
   printf("\n");
 */
 	//Execute
-	execute(tokens, tokenCount);
+	//execute(tokens, tokenCount);
   //add command to history queue
   if(current_queue_size(&q)==20)
   {
@@ -429,10 +431,21 @@ int main()
 	free(userResponse);
   free(currentCommand);
   }
-  printf("Ostatni element:\n");
-  printf("%s\n",last(&q));
-  printf("Obecna kolejka:\n");
-  print_queue(&q);
+
+  fp = fopen(pathToShellLogFile, "w");
+    if (fp == NULL)
+        exit(EXIT_FAILURE); //CZY TO OK?
+
+  while(front(&q)!=NULL)
+  {
+    fprintf(fp,"%s",front(&q));
+    pop(&q);
+  }
+  fclose(fp);
+
+
+
+
 
   return 0;
 }
