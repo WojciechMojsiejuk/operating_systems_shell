@@ -73,21 +73,3 @@ int current_queue_size(struct Queue *q)
 {
   return q->size;
 }
-
-// Driver code.
-int main(void)
-{
-	struct Queue q;
-	init(&q);
-  char* napis1 = "abc";
-  char* napis2 = "abcd";
-  char* napis3 = "bcd";
-  char* napis4 = "aaa";
-	push(&q, napis1);
-  push(&q, napis2);
-  push(&q, napis3);
-  push(&q, napis4);
-  pop(&q);
-  print_queue(&q);
-  printf("%d",current_queue_size(&q));
-}
