@@ -1,3 +1,4 @@
+#include "queue.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -58,6 +59,7 @@ void push(struct Queue *q, char* data) {
 		q->last = q->last->next;
 	}
 }
+<<<<<<< HEAD
 
 void print_queue(struct Queue *q)
 {
@@ -73,3 +75,5 @@ int current_queue_size(struct Queue *q)
 {
   return q->size;
 }
+=======
+>>>>>>> 482fd6c5de4fb92bc0ff55ebdba39c328fc81144
