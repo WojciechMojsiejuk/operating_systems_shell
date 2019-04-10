@@ -19,7 +19,11 @@ void init(struct Queue *q) {
 }
 
 char* front(struct Queue *q) {
-	return q->front->data;
+  if(q->front != NULL)
+  {
+  	return q->front->data;
+  }
+  return NULL;
 }
 
 void pop(struct Queue *q) {
