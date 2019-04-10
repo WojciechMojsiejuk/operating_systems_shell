@@ -15,7 +15,7 @@ struct Queue {
 void init(struct Queue *q) {
 	q->front = NULL;
 	q->last = NULL;
-	q->size = 20;
+	q->size = 0;
 }
 
 char* front(struct Queue *q) {

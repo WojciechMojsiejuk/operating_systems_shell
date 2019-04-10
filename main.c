@@ -314,7 +314,7 @@ void execute(char** command, int tokenCount)
         {
           execToFile(first_buffer, second_buffer[0], 0);
         }
-        is_pipe==1;
+        is_pipe=1;
       }
       if(tokenType[i]==2)
       {
@@ -327,7 +327,7 @@ void execute(char** command, int tokenCount)
         {
           execToFile(first_buffer, second_buffer[0], 0);
         }
-        is_redirect==2;
+        is_redirect=2;
       }
       //pipe = 1, redirect = 2, parameter = 3, command = 4, backgroundProcess = 5
     	//TODO: check type of token (-, >>, | etc.) and do action
