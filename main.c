@@ -541,8 +541,8 @@ int main()
 	free(userResponse);
   free(currentCommand);
   }
-/*
-  fp = fopen(pathToShellLogFile, "w");
+
+  fp = fopen(pathToShellLogFile, "a");
     if (fp == NULL)
         exit(EXIT_FAILURE); //CZY TO OK?
 
@@ -551,8 +551,8 @@ int main()
     fprintf(fp,"%s",front(&q));
     pop(&q);
   }
-  fclose(fp);*/
-
+  fclose(fp);
+	printf("Jestem tu\n");
 
 
 
