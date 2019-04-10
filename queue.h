@@ -17,7 +17,7 @@
 
 	char* front(struct Queue *q);
 
-	char* last (struct Queue *q);
+	char* last(struct Queue *q);
 
 	void pop(struct Queue *q);
 
@@ -25,5 +25,6 @@
 
 	void print_queue(struct Queue *q);
 
-	int current_queue_size (struct Queue *q);
+	int current_queue_size(struct Queue *q);
+
 #endif

@@ -10,8 +10,18 @@
 #include <pwd.h>
 #include "queue.h"
 
-//global queue
+
+volatile sig_atomic_t running = 1;
 struct Queue q;
+
+void handler(int signum)
+{
+	if(signum == SIGQUIT)
+	{
+		running = 0;
+	}
+	exit(signum);
+}
 
 void printCommandPrompt()
 {
@@ -353,10 +363,12 @@ int main()
   }
   printf("HOME: %s \n",homedir);
 
+
   //initialize queue
 	init(&q);
+	signal(SIGQUIT, handler);
+  while(running)
 
-  while(1)
   {
 	printCommandPrompt();
 	char* userResponse = readLineFromCommandPrompt();
@@ -372,6 +384,7 @@ int main()
 		fprintf(stderr, "getTokens() failed\n");
 		return 2;
 	}
+		print_queue(&q);
 	//Execute
 	execute(tokens, tokenCount);
   //add command to history queue
@@ -388,6 +401,4 @@ int main()
 	free(userResponse);
   }
   return 0;
-  /* wait pid jeżeli & to jest wyłączony */
-
 }
