@@ -486,7 +486,10 @@ int main()
   //printf("%s",pathToShellLogFile);
   fp = fopen(pathToShellLogFile, "rb");
     if (fp == NULL)
-        exit(EXIT_FAILURE); //CZY TO OK?
+	{
+	printf("xd");
+	        exit(EXIT_FAILURE); //CZY TO OK?
+	}
 
   while ((read = getline(&line, &len, fp)) != -1)
   {
@@ -499,7 +502,7 @@ int main()
   fclose(fp);
   free(line);
 	signal(SIGQUIT, handler);
-  while(1)
+  while(running)
   {
 	printCommandPrompt();
 	char* userResponse = readLineFromCommandPrompt();
@@ -536,13 +539,8 @@ int main()
   }
 
   push(&q, currentCommand);
-	//Free allocated memory
-	free(tokens);
-	free(userResponse);
-  free(currentCommand);
-  }
-
-  fp = fopen(pathToShellLogFile, "a");
+//Log
+  /*fp = fopen(pathToShellLogFile, "a");
     if (fp == NULL)
         exit(EXIT_FAILURE); //CZY TO OK?
 
@@ -551,8 +549,27 @@ int main()
     fprintf(fp,"%s",front(&q));
     pop(&q);
   }
-  fclose(fp);
+  fclose(fp);*/
+	//Free allocated memory
+	free(tokens);
+	free(userResponse);
+  free(currentCommand);
+  }
 	printf("Jestem tu\n");
+  /*fp = fopen(pathToShellLogFile, "w");
+    if (fp == NULL)
+	{
+	printf("xd");
+        exit(EXIT_FAILURE); //CZY TO OK?
+	}
+
+  while(front(&q)!=NULL)
+  {
+    fprintf(fp,"%s",front(&q));
+	printf("%s", front(&q));
+    pop(&q);
+  }
+  fclose(fp);*/
 
 
 
