@@ -154,16 +154,35 @@ void tempExecRedirect()
 
 //Execvp (with fork), prints output to stdout
 void execToStdout(char** bufor,int bufferSize, int backgroundProcess)
-{
+{	
+/*
+	printf("%d", bufferSize);
   char** restrictedBuffer=(char**)malloc((bufferSize+1)*sizeof(char*));
   int i=0;
   for(;i<bufferSize;i++)
   {
     restrictedBuffer[i]=bufor[i];
+	//strcpy(restrictedBuffer[i],bufor[i]);
   }
   // strcpy(restrictedBuffer[i],bufor[i]);
   restrictedBuffer[i+1]=NULL;
-  printf("EXEC: %s\n",bufor[i]);
+	printf("ALL EXECVP ARGS: \n");*/
+	int testIter;
+	for(testIter=0;testIter<bufferSize;testIter++)
+	{
+		if(bufor[testIter]==NULL)
+			printf("NULL ");
+		else
+			printf("%s ", bufor[testIter]);
+	
+		//printf("%s ", bufor[tes
+		/*if(restrictedBuffer[testIter] == NULL)
+			printf("NULL ");
+		else
+			printf("%s ", restrictedBuffer[testIter]);*/
+	}
+	//printf("\nEND\n");
+  //printf("EXEC: %s\n",bufor[0]);
 	pid_t pid;
 	/* Fork a child process. */
 	pid = fork();
@@ -171,7 +190,8 @@ void execToStdout(char** bufor,int bufferSize, int backgroundProcess)
 	if (pid == (pid_t) 0)
 	{
 		/* Replace the child process with our program. */
-		int execvpResult = execvp (restrictedBuffer[0], restrictedBuffer);
+		//int execvpResult = execvp (restrictedBuffer[0], restrictedBuffer);
+		int execvpResult = execvp (bufor[0], bufor);
 		if(execvpResult == -1)
 		{
 			perror("execvp failed");
@@ -492,12 +512,12 @@ void execute(char** command, int tokenCount)
   //   free(first_buffer[freeMemoryIndex]);
   //   free(second_buffer[freeMemoryIndex]);
   // }
-  free(first_buffer);
-  free(second_buffer);
+  //free(first_buffer);
+  //free(second_buffer);
   // first_buffer=NULL;
   // second_buffer=NULL;
   //printf("PATH : %s\n", getenv("PATH"));
-	free(tokenType);
+	//free(tokenType);
 }
 
 int main()
@@ -564,6 +584,7 @@ int main()
 	signal(SIGQUIT, handler);
   while(1)
   {
+	//printf("BEGINNING SHELL");
 	printCommandPrompt();
 	char* userResponse = readLineFromCommandPrompt();
 	if(userResponse == NULL)
@@ -572,6 +593,7 @@ int main()
 		//printf("EOF?\n");
 		break;
 	}
+	//printf("FLAG\n");
   // char* currentCommand=malloc(strlen(userResponse)+1);
   // strcpy(currentCommand,userResponse);
 	int tokenCount = 0;
@@ -590,6 +612,7 @@ int main()
 
 	//Execute
 	execute(tokens, tokenCount);
+	printf("AFTER EXECUTE ALL");
   //add command to history queue
   /*if(current_queue_size(&q)==20)
   {
