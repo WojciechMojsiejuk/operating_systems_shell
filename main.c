@@ -510,7 +510,8 @@ int main()
   fp = fopen(pathToShellLogFile, "r+");
     if (fp == NULL)
     {
-      printf("Creating file log...");
+      perror(pathToShellLogFile);
+      printf("Creating file log...\n");
       fp=fopen(pathToShellLogFile, "w+");
       if(fp == NULL)
       {
@@ -518,18 +519,27 @@ int main()
         exit(EXIT_FAILURE);
       }
     }
-  printf("Opened file log");
+  printf("Opened file log\n");
          //CZY TO OK?
 
-  while ((read = getline(&line, &len, fp)) != -1)
+
+  while ((read = getline(&line, &len, fp)) > 0)
   {
       //initialize queue with values from log file
+      size_t length = strlen(line);
+       if((length > 0) && (line[length-1] == '\n'))
+       {
+           line[length-1] ='\0';
+       }
       push(&q,line);
       printf("Line from file: %s Value in queue:", line);
       printf("%s",front(&q));
       printf("\n Queue size: %d",current_queue_size(&q));
       free(line);
+      line=NULL;
+      len=0;
   }
+  printf("OK działa\n");
   if(read == -1)
     {
       free(line);
@@ -570,15 +580,18 @@ int main()
     //delete old history
     pop(&q);
   }
-
+  printf("CZY DZIAŁA?");
+  printf("%s",currentCommand);
+  printf("TY KURWO JEBANA ZMARNOWALAS MI 20 lat zycia");
   push(&q, currentCommand);
+  printf("NIE DZIAŁA");
 	//Free allocated memory
   //HELP: https://stackoverflow.com/questions/13148119/what-does-pointer-being-freed-was-not-allocated-mean-exactly
-  int freeTokensIndex;
-  for(freeTokensIndex=0;freeTokensIndex<tokenCount;freeTokensIndex++)
-  {
-    free(tokens[freeTokensIndex]);
-  }
+  // int freeTokensIndex;
+  // for(freeTokensIndex=0;freeTokensIndex<tokenCount;freeTokensIndex++)
+  // {
+  //   free(tokens[freeTokensIndex]);
+  // }
 	free(tokens);
 	free(userResponse);
   free(currentCommand);
