@@ -506,7 +506,7 @@ int main()
   char* pathToShellLogFile=malloc(strlen(homedir)+strlen(shellLogName)+1);
   strcpy(pathToShellLogFile,homedir);
   strcat(pathToShellLogFile,shellLogName);
-  printf("Sciezka do pliku: %s\n",pathToShellLogFile);
+  printf("Path to log file: %s\n",pathToShellLogFile);
   fp = fopen(pathToShellLogFile, "r+");
     if (fp == NULL)
     {
@@ -518,18 +518,23 @@ int main()
         exit(EXIT_FAILURE);
       }
     }
+  printf("Opened file log");
          //CZY TO OK?
 
   while ((read = getline(&line, &len, fp)) != -1)
   {
       //initialize queue with values from log file
       push(&q,line);
-      printf("Linie z pliku: %swartość w kolejce:", line);
+      printf("Line from file: %s Value in queue:", line);
       printf("%s",front(&q));
-      printf("\n Rozmiar kolejki: %d",current_queue_size(&q));
+      printf("\n Queue size: %d",current_queue_size(&q));
+      free(line);
   }
+  if(read == -1)
+    {
+      free(line);
+    }
   fclose(fp);
-  free(line);
 	signal(SIGQUIT, handler);
   while(1)
   {
@@ -543,7 +548,6 @@ int main()
 	}
   char* currentCommand=malloc(strlen(userResponse)+1);
   strcpy(currentCommand,userResponse);
-
 	int tokenCount = 0;
 	char** tokens = getTokens(userResponse, &tokenCount);
 	if(tokens == NULL)
