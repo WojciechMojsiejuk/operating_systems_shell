@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#define DEBUG
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -36,8 +37,33 @@ void printCommandPrompt()
 
 //TODO: Finish this function
 //Execvp(with fork), redirects output to other execvp
-void execWithRedirect(char** bufor, char** bufor2, int backgroundProcess)
+void execWithRedirect(char** bufor, int buferSize, char** bufor2, int bufer2Size, int backgroundProcess)
 {
+	#ifdef DEBUG
+	printf("In execWithRedirect() function\n");
+	printf("\tbuferSize: %d\n", buferSize);
+	printf("\tbufer2Size: %d\n", bufer2Size);
+	printf("\texecWithRedirect() - printing bufor tokens from parameter\n");
+	printf("\tBufer 1: ");
+	int testIter;
+	for(testIter=0;testIter<buferSize;testIter++)
+	{
+		if(bufor[testIter]==NULL)
+			printf("NULL ");
+		else
+			printf("%s ", bufor[testIter]);
+	}
+	printf("\n");
+	printf("\t Bufer 2: ");
+	for(testIter=0;testIter<bufer2Size;testIter++)
+	{
+		if(bufor2[testIter]==NULL)
+			printf("NULL ");
+		else
+			printf("%s ", bufor2[testIter]);
+	}
+	printf("\n");
+	#endif
 	int fds[2];
 	pid_t pid;
 	/* Create a pipe. File descriptors for the two ends of the pipe are placed in fds. */
@@ -167,6 +193,10 @@ void execToStdout(char** bufor,int bufferSize, int backgroundProcess)
   // strcpy(restrictedBuffer[i],bufor[i]);
   restrictedBuffer[i+1]=NULL;
 	printf("ALL EXECVP ARGS: \n");*/
+	#ifdef DEBUG
+	printf("In execToStdout() function:\n");
+	printf("\tbuferSize: %d\n", bufferSize);
+	printf("\texecToStdout() - printing bufor tokens from parameter\n\t");
 	int testIter;
 	for(testIter=0;testIter<bufferSize;testIter++)
 	{
@@ -174,13 +204,14 @@ void execToStdout(char** bufor,int bufferSize, int backgroundProcess)
 			printf("NULL ");
 		else
 			printf("%s ", bufor[testIter]);
-	
 		//printf("%s ", bufor[tes
 		/*if(restrictedBuffer[testIter] == NULL)
 			printf("NULL ");
 		else
 			printf("%s ", restrictedBuffer[testIter]);*/
 	}
+	printf("\n");
+	#endif
 	//printf("\nEND\n");
   //printf("EXEC: %s\n",bufor[0]);
 	pid_t pid;
@@ -214,8 +245,22 @@ void execToStdout(char** bufor,int bufferSize, int backgroundProcess)
 }
 
 //Execvp (with fork), prints output to file
-void execToFile(char** bufor, char* fileName, int backgroundProcess)
+void execToFile(char** bufor, int buferSize, char* fileName, int backgroundProcess)
 {
+	#ifdef DEBUG
+	printf("In execToFile() function\n");
+	printf("\tbuferSize: %d\n", buferSize);
+	printf("\texecToFile() - printing bufor tokens from parameter\n\t");
+	int testIter;
+	for(testIter=0;testIter<buferSize;testIter++)
+	{
+		if(bufor[testIter]==NULL)
+			printf("NULL ");
+		else
+			printf("%s ", bufor[testIter]);
+	}
+	printf("\n");
+	#endif
 	int fds[2];
 	pid_t pid;
 	/* Create a pipe. File descriptors for the two ends of the pipe are placed in fds. */
@@ -313,6 +358,7 @@ char** getTokens(char* line, int *tokenCount)
 	if(position >= bufsize)
 	{
 		fprintf(stderr, "getTokens: position out of range\n");
+		fprintf(stderr, "Make sure command is not too long\n");
 		return NULL;
 	}
 	token = strtok(NULL, delim);
@@ -337,7 +383,6 @@ void execute(char** command, int tokenCount)
 	int* tokenType = (int*)malloc(tokenCount * sizeof(int));
 	//types:
 	//pipe = 1, redirect = 2, parameter = 3, command = 4, backgroundProcess = 5
-	//TODO: check type of token (-, >>, | etc.) and do action
 	for(i=0;i<tokenCount;i++)
 	{
 		//Reset type
@@ -359,7 +404,6 @@ void execute(char** command, int tokenCount)
 			tokenType[i] = 2;
 		}
 		//command
-		//TODO:check if previous was pipe or it is first token
 		else if(i == 0 || tokenType[i-1] == 1)
 		{
 			tokenType[i] = 4;
@@ -424,6 +468,7 @@ void execute(char** command, int tokenCount)
         {
       		//wywolaj funkcje bo doszlismy do drugiego pipe'a
       		//DEBUG CODE
+			/*
       		int l;
       		printf("DEBUG REDIRECT\n");
       		for(l=0;l<tokenCount;l++)
@@ -431,13 +476,16 @@ void execute(char** command, int tokenCount)
       			printf("1: %s", first_buffer[l]);
       			printf("2: %s", second_buffer[l]);
       		}
+			*/
       		//DEBUG END
-      		execWithRedirect(first_buffer,second_buffer,0);
+			//TODO: Set correct buffors size
+      		execWithRedirect(first_buffer, -1, second_buffer, -1, 0);
         }
         //CASE: a|B>>
         if(is_redirect==2)
         {
-          execToFile(first_buffer, second_buffer[0], 0);
+		//TODO: set valid tokenSize
+          execToFile(first_buffer, -1, second_buffer[0], 0);
         }
         //set flag to true, because pipe was found in command
         is_pipe=1;
@@ -447,25 +495,29 @@ void execute(char** command, int tokenCount)
       {
         //CASE: a>>b|
         //CZY POWINIEN WGL BYC UWZGLEDNIANY?
-              if(is_pipe==1)
-              {
-      		//DEBUG CODE
-          int l;
-      		printf("DEBUG REDIRECT\n");
-      		for(l=0;l<tokenCount;l++)
-      		{
-      			printf("1: %s", first_buffer[l]);
-      			printf("2: %s", second_buffer[l]);
-      		}
-      		//DEBUG END
-      		//wywolaj funkcje bo doszlismy do drugiego pipe'a
-      		execWithRedirect(first_buffer,second_buffer,0);
-              }
-              if(is_redirect==2)
-              {
-                execToFile(first_buffer, second_buffer[0], 0);
-              }
-              is_redirect=2;
+            if(is_pipe==1)
+            {
+		  		//DEBUG CODE
+				/*
+		      	int l;
+		  		printf("DEBUG REDIRECT\n");
+		  		for(l=0;l<tokenCount;l++)
+		  		{
+		  			printf("1: %s", first_buffer[l]);
+		  			printf("2: %s", second_buffer[l]);
+		  		}
+				*/
+		  		//DEBUG END
+		  		//wywolaj funkcje bo doszlismy do drugiego pipe'a
+//TODO: Set correct buffors size
+		  		execWithRedirect(first_buffer, -1, second_buffer, -1, 0);
+              	}
+		          if(is_redirect==2)
+		          {
+					//TODO: Set valid buffer size
+		            execToFile(first_buffer, -1, second_buffer[0], 0);
+		          }
+		          is_redirect=2;
       }
       //if we reached end of command
 	else if(tokenType[i] == 4 && i == tokenCount-1)
@@ -474,6 +526,7 @@ void execute(char** command, int tokenCount)
         	if(is_pipe==1)
         	{
       			//DEBUG CODE
+				/*
       			int l;
       			printf("DEBUG REDIRECT\n");
       			for(l=0;l<tokenCount;l++)
@@ -481,14 +534,17 @@ void execute(char** command, int tokenCount)
       				printf("1: %s", first_buffer[l]);
       				printf("2: %s", second_buffer[l]);
       			}
+				*/
       			//DEBUG END
       			//wywolaj funkcje bo doszlismy do drugiego pipe'a
-      			execWithRedirect(first_buffer,second_buffer,0);
+				//TODO: Set valid buffers size
+      			execWithRedirect(first_buffer, -1, second_buffer, -1, 0);
         	}
           //CASE a>>b
 		if(is_redirect==2)
 		{
-		  execToFile(first_buffer, second_buffer[0], 0);
+			//TODO: Set valid buffer size
+		  execToFile(first_buffer, -1, second_buffer[0], 0);
 		}
     /*
     SUGGESTION:
@@ -497,14 +553,16 @@ void execute(char** command, int tokenCount)
     */
 	}
       //pipe = 1, redirect = 2, parameter = 3, command = 4, backgroundProcess = 5
-    	//TODO: check type of token (-, >>, | etc.) and do action
-
   }
+	//DEBUG CODE
+	/*
   int iter=0;
   for (;iter<tokenCount;iter++)
     printf("Pierwszy buffor: %s\n",first_buffer[iter]);
   for (iter=0;iter<tokenCount;iter++)
     printf("Drugi buffor: %s\n",second_buffer[iter]);
+	*/
+	//END DEBUG
 	execToStdout(first_buffer,i,0);
   // int freeMemoryIndex;
   // for(freeMemoryIndex=0;freeMemoryIndex<tokenCount;freeMemoryIndex++)
@@ -512,26 +570,31 @@ void execute(char** command, int tokenCount)
   //   free(first_buffer[freeMemoryIndex]);
   //   free(second_buffer[freeMemoryIndex]);
   // }
-  //free(first_buffer);
-  //free(second_buffer);
+  free(first_buffer);
+  free(second_buffer);
   // first_buffer=NULL;
   // second_buffer=NULL;
   //printf("PATH : %s\n", getenv("PATH"));
-	//free(tokenType);
+	free(tokenType);
 }
 
 int main()
 {
+	#ifdef DEBUG
+	printf("Using shell in debug mode!!\n");
+	#endif
   //initialize queue
   init(&q);
 
   //get user home directory
   const char *homedir;
-  if ((homedir = getenv("HOME")) == NULL)
+  if((homedir = getenv("HOME")) == NULL)
   {
     homedir = getpwuid(getuid())->pw_dir;
   }
-  printf("HOME: %s \n",homedir);
+		#ifdef DEBUG
+  printf("HOME PATH: %s \n",homedir);
+		#endif
 
   //read log file
   FILE *fp;
@@ -542,9 +605,11 @@ int main()
   char* pathToShellLogFile=malloc(strlen(homedir)+strlen(shellLogName)+1);
   strcpy(pathToShellLogFile,homedir);
   strcat(pathToShellLogFile,shellLogName);
+	#ifdef DEBUG
   printf("Path to log file: %s\n",pathToShellLogFile);
+	#endif
   fp = fopen(pathToShellLogFile, "r+");
-    if (fp == NULL)
+    if(fp == NULL)
     {
       perror(pathToShellLogFile);
       printf("Creating file log...\n");
@@ -555,7 +620,7 @@ int main()
         exit(EXIT_FAILURE);
       }
     }
-  printf("Opened file log\n");
+  printf("Opened file log!\n");
          //CZY TO OK?
 
 
@@ -568,14 +633,15 @@ int main()
            line[length-1] ='\0';
        }
       push(&q,line);
+		#ifdef DEBUG
       printf("Line from file: %s Value in queue:", line);
-      printf("%s",front(&q));
+      printf("Queue front: %s",front(&q));
       printf("\n Queue size: %d",current_queue_size(&q));
+		#endif
       free(line);
       line=NULL;
       len=0;
   }
-  printf("OK działa\n");
   if(read == -1)
     {
       free(line);
@@ -584,9 +650,12 @@ int main()
 	signal(SIGQUIT, handler);
   while(1)
   {
-	//printf("BEGINNING SHELL");
+	#ifdef DEBUG
+	printf("BEGINNING SHELL LOOP\n");
+	#endif
 	printCommandPrompt();
 	char* userResponse = readLineFromCommandPrompt();
+	//EOF character
 	if(userResponse == NULL)
 	{
 		//fprintf(stderr, "readLineFromCommandPrompt() failed\n");
@@ -604,15 +673,18 @@ int main()
 		return 2;
 	}
 //TODO: FIX THIS
+	#ifdef DEBUG
  int i;
-  printf("Otrzymane tokeny: ");
+  printf("Tokens get: ");
   for(i=0;i<tokenCount;i++)
     printf("%s ",tokens[i]);
   printf("\n");
-
+	#endif
 	//Execute
 	execute(tokens, tokenCount);
-	printf("AFTER EXECUTE ALL");
+	#ifdef DEBUG
+	printf("AFTER EXECUTE() FUNCTION\n");
+	#endif
   //add command to history queue
   /*if(current_queue_size(&q)==20)
   {
@@ -631,23 +703,26 @@ int main()
   // // {
   // //   free(tokens[freeTokensIndex]);
   // // }
-	// free(tokens);
-	// free(userResponse);
+	 free(tokens);
+	 free(userResponse);
   // free(currentCommand);
 
   }
 
   fp = fopen(pathToShellLogFile, "a");
-    if (fp == NULL)
+    if(fp == NULL)
         exit(EXIT_FAILURE); //CZY TO OK?*/
-
+	#ifdef DEBUG
+	printf("Current queue: \n");
+	#endif
   while(front(&q)!=NULL)
   {
     fprintf(fp,"%s",front(&q));
-    printf("%s",front(&q));
+	#ifdef DEBUG
+    printf("%s ",front(&q));
+	#endif
     pop(&q);
   }
   fclose(fp);
-	printf("Jestem tu\n");
   return 0;
 }
