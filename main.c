@@ -315,6 +315,11 @@ void execute(char** command, int tokenCount)
 	int i;
 	//Create table with types
 	int* tokenType = (int*)malloc(tokenCount * sizeof(int));
+  if(tokenType==NULL)
+  {
+    fprintf(stderr, "tokenType memory error\n");
+    return;
+  }
 	//types:
 	//pipe = 1, redirect = 2, parameter = 3, command = 4, backgroundProcess = 5
 	//TODO: check type of token (-, >>, | etc.) and do action
@@ -486,12 +491,12 @@ void execute(char** command, int tokenCount)
   for (iter=0;iter<tokenCount;iter++)
     printf("Drugi buffor: %s\n",second_buffer[iter]);
 	execToStdout(first_buffer,i,0);
-  // int freeMemoryIndex;
-  // for(freeMemoryIndex=0;freeMemoryIndex<tokenCount;freeMemoryIndex++)
-  // {
-  //   free(first_buffer[freeMemoryIndex]);
-  //   free(second_buffer[freeMemoryIndex]);
-  // }
+  int freeMemoryIndex;
+  for(freeMemoryIndex=0;freeMemoryIndex<tokenCount;freeMemoryIndex++)
+  {
+    free(first_buffer[freeMemoryIndex]);
+    free(second_buffer[freeMemoryIndex]);
+  }
   free(first_buffer);
   free(second_buffer);
   // first_buffer=NULL;
@@ -603,14 +608,14 @@ int main()
   // printf("NIE DZIAŁA");
 	// //Free allocated memory
   // //HELP: https://stackoverflow.com/questions/13148119/what-does-pointer-being-freed-was-not-allocated-mean-exactly
-  // // int freeTokensIndex;
-  // // for(freeTokensIndex=0;freeTokensIndex<tokenCount;freeTokensIndex++)
-  // // {
-  // //   free(tokens[freeTokensIndex]);
-  // // }
+  // int freeTokensIndex;
+  // for(freeTokensIndex=0;freeTokensIndex<tokenCount;freeTokensIndex++)
+  // {
+  //   free(tokens[freeTokensIndex]);
+  // }
 	// free(tokens);
-	// free(userResponse);
-  // free(currentCommand);
+	free(userResponse);
+  //free(currentCommand);
 
   }
 
