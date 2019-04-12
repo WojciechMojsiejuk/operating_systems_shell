@@ -1,6 +1,7 @@
 #include "queue.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void init(struct Queue *q) {
 	q->front = NULL;
@@ -35,18 +36,20 @@ void pop(struct Queue *q) {
 
 void push(struct Queue *q, char* data) {
 	q->size++;
-
+  char* currentdata=malloc(strlen(data)+1);
+  strcpy(currentdata,data);
 	if (q->front == NULL) {
 		q->front = (struct Node *) malloc(sizeof(struct Node));
-		q->front->data = data;
+		q->front->data = currentdata;
 		q->front->next = NULL;
 		q->last = q->front;
 	} else {
 		q->last->next = (struct Node *) malloc(sizeof(struct Node));
-		q->last->next->data = data;
+		q->last->next->data = currentdata;
 		q->last->next->next = NULL;
 		q->last = q->last->next;
 	}
+  currentdata=NULL;
 }
 
 void print_queue(struct Queue *q)

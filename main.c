@@ -153,8 +153,17 @@ void tempExecRedirect()
 */
 
 //Execvp (with fork), prints output to stdout
-void execToStdout(char** bufor, int backgroundProcess)
+void execToStdout(char** bufor,int bufferSize, int backgroundProcess)
 {
+  char** restrictedBuffer=(char**)malloc((bufferSize+1)*sizeof(char*));
+  int i=0;
+  for(;i<bufferSize;i++)
+  {
+    restrictedBuffer[i]=bufor[i];
+  }
+  // strcpy(restrictedBuffer[i],bufor[i]);
+  restrictedBuffer[i+1]=NULL;
+  printf("EXEC: %s\n",bufor[i]);
 	pid_t pid;
 	/* Fork a child process. */
 	pid = fork();
@@ -162,7 +171,7 @@ void execToStdout(char** bufor, int backgroundProcess)
 	if (pid == (pid_t) 0)
 	{
 		/* Replace the child process with our program. */
-		int execvpResult = execvp (bufor[0], bufor);
+		int execvpResult = execvp (restrictedBuffer[0], restrictedBuffer);
 		if(execvpResult == -1)
 		{
 			perror("execvp failed");
@@ -272,7 +281,7 @@ char** getTokens(char* line, int *tokenCount)
 {
 	char* delim = " \t\r\n\a";
   int bufsize = 64, position = 0;
-  char **tokens = malloc(bufsize * sizeof(char*));
+  char **tokens = (char**)malloc(bufsize * sizeof(char*));
   char *token = NULL;
   //printf("%s\n",line);
   token = strtok(line, delim);
@@ -364,8 +373,8 @@ void execute(char** command, int tokenCount)
 			return;
 		}
 	}*/
-  char** first_buffer = malloc(tokenCount * sizeof(char*));
-  char** second_buffer = malloc(tokenCount * sizeof(char*));
+  char** first_buffer = (char**)malloc(tokenCount * sizeof(char*));
+  char** second_buffer = (char**)malloc(tokenCount * sizeof(char*));
   int is_pipe=0; //by default set this flag to false
   int is_redirect=0;  //by default set this flag to false
   int is_background_process=0; //by default set this flag to false
@@ -471,15 +480,22 @@ void execute(char** command, int tokenCount)
     	//TODO: check type of token (-, >>, | etc.) and do action
 
   }
-	execToStdout(first_buffer, 0);
-  int freeMemoryIndex;
-  for(freeMemoryIndex=0;freeMemoryIndex<tokenCount;freeMemoryIndex++)
-  {
-    free(first_buffer[freeMemoryIndex]);
-    free(second_buffer[freeMemoryIndex]);
-  }
+  int iter=0;
+  for (;iter<tokenCount;iter++)
+    printf("Pierwszy buffor: %s\n",first_buffer[iter]);
+  for (iter=0;iter<tokenCount;iter++)
+    printf("Drugi buffor: %s\n",second_buffer[iter]);
+	execToStdout(first_buffer,i,0);
+  // int freeMemoryIndex;
+  // for(freeMemoryIndex=0;freeMemoryIndex<tokenCount;freeMemoryIndex++)
+  // {
+  //   free(first_buffer[freeMemoryIndex]);
+  //   free(second_buffer[freeMemoryIndex]);
+  // }
   free(first_buffer);
   free(second_buffer);
+  // first_buffer=NULL;
+  // second_buffer=NULL;
   //printf("PATH : %s\n", getenv("PATH"));
 	free(tokenType);
 }
@@ -556,8 +572,8 @@ int main()
 		//printf("EOF?\n");
 		break;
 	}
-  char* currentCommand=malloc(strlen(userResponse)+1);
-  strcpy(currentCommand,userResponse);
+  // char* currentCommand=malloc(strlen(userResponse)+1);
+  // strcpy(currentCommand,userResponse);
 	int tokenCount = 0;
 	char** tokens = getTokens(userResponse, &tokenCount);
 	if(tokens == NULL)
@@ -575,26 +591,26 @@ int main()
 	//Execute
 	execute(tokens, tokenCount);
   //add command to history queue
-  if(current_queue_size(&q)==20)
+  /*if(current_queue_size(&q)==20)
   {
     //delete old history
     pop(&q);
-  }
-  printf("CZY DZIAŁA?");
-  printf("%s",currentCommand);
-  printf("TY KURWO JEBANA ZMARNOWALAS MI 20 lat zycia");
-  push(&q, currentCommand);
-  printf("NIE DZIAŁA");
-	//Free allocated memory
-  //HELP: https://stackoverflow.com/questions/13148119/what-does-pointer-being-freed-was-not-allocated-mean-exactly
-  // int freeTokensIndex;
-  // for(freeTokensIndex=0;freeTokensIndex<tokenCount;freeTokensIndex++)
-  // {
-  //   free(tokens[freeTokensIndex]);
-  // }
-	free(tokens);
-	free(userResponse);
-  free(currentCommand);
+  }*/
+  // printf("CZY DZIAŁA?");
+  // printf("%s",currentCommand);
+  // printf("TY KURWO JEBANA ZMARNOWALAS MI 20 lat zycia");
+  // push(&q, currentCommand);
+  // printf("NIE DZIAŁA");
+	// //Free allocated memory
+  // //HELP: https://stackoverflow.com/questions/13148119/what-does-pointer-being-freed-was-not-allocated-mean-exactly
+  // // int freeTokensIndex;
+  // // for(freeTokensIndex=0;freeTokensIndex<tokenCount;freeTokensIndex++)
+  // // {
+  // //   free(tokens[freeTokensIndex]);
+  // // }
+	// free(tokens);
+	// free(userResponse);
+  // free(currentCommand);
 
   }
 
