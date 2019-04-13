@@ -65,50 +65,65 @@ void execWithRedirect(char** bufor, int buferSize, char** bufor2, int bufer2Size
 	printf("\n");
 	#endif
 	int fds[2];
-	pid_t pid;
+	pid_t pid, pid2;
 	/* Create a pipe. File descriptors for the two ends of the pipe are placed in fds. */
-	int pipeResult = pipe (fds);
+	int pipeResult = pipe(fds);
 	if(pipeResult == -1)
 	{
 		printf("Pipe failed\n");
 		return;
 	}
 	/* Fork a child process. */
-	int i;
-	for(i=0;i<2;i++)
+	pid = fork();
+	/* This is the child process. Close our copy of the write end of the file descriptor. */
+	if (pid == (pid_t) 0)
 	{
-		pid = fork();
-		/* This is the child process. Close our copy of the write end of the file descriptor. */
-		if (pid == (pid_t) 0)
+		/* Connect the read end of the pipe to standard input. */
+		dup2 (fds[1], STDOUT_FILENO);
+		close(fds[0]);
+		close (fds[1]);
+		/* Replace the child process with our program. */
+		int execvpResult = execvp (bufor[0], bufor);
+		if(execvpResult == -1)
 		{
-			close (fds[1]);
-			/* Connect the read end of the pipe to standard input. */
-			dup2 (fds[0], STDIN_FILENO);
-			/* Replace the child process with our program. */
-			int execvpResult;
-			if(i==0)
-				execvpResult = execvp (bufor[0], bufor);
-			else
-				execvpResult = execvp(bufor2[0], bufor2);
-			if(execvpResult == -1)
+			perror("execvp failed");
+			return;
+		}
+	}
+	//fork error handling
+	else if(pid < 0)
+	{
+		printf("Fork failed");
+		return;
+	}
+	/* This is the parent process. */
+	else
+	{
+		pid2 = fork();
+		//Child 2 - Success fork
+		if (pid2 == (pid_t) 0)
+		{
+			close(fds[1]);
+			dup2(fds[0], STDIN_FILENO);
+			close(fds[0]);
+			int execvp2Result = execvp(bufor2[0], bufor2);
+			if(execvp2Result == -1)
 			{
-				perror("execvp failed");
+				perror("execvp2 failed");
 				return;
 			}
 		}
-		//fork error handling
-		else if(pid < 0)
+		else if(pid2 < 0)
 		{
-			printf("Fork failed");
+			printf("Fork2 failed");
 			return;
 		}
-		/* This is the parent process. */
+		//Parent
 		else
 		{
-			//FILE* stream;
 			/* Close our copy of the read end of the file descriptor. */
 			close (fds[0]);
-			// /* Convert the write file descriptor to a FILE object, and write to it. */
+		/* Convert the write file descriptor to a FILE object, and write to it. */
 			close (fds[1]);
 			/* Wait for the child process to finish (unless there was a & character)*/
 			if(!backgroundProcess)
@@ -117,66 +132,6 @@ void execWithRedirect(char** bufor, int buferSize, char** bufor2, int bufer2Size
 	}
 	return;
 }
-
-//TODO: Clear this function and its calls
-/*
-void tempExecRedirect()
-{
-	char bufor[2][] = {"ls", "ls"};
-	int fds[2];
-	pid_t pid;
-	// Create a pipe. File descriptors for the two ends of the pipe are placed in fds.
-	int pipeResult = pipe (fds);
-	if(pipeResult == -1)
-	{
-		printf("Pipe failed\n");
-		return;
-	}
-	//Fork a child process.
-	int i;
-	for(i=0;i<2;i++)
-	{
-		pid = fork();
-		// This is the child process. Close our copy of the write end of the file descriptor.
-		if (pid == (pid_t) 0)
-		{
-			close (fds[1]);
-			// Connect the read end of the pipe to standard input.
-			dup2 (fds[0], STDIN_FILENO);
-			// Replace the child process with our program.
-			int execvpResult;
-			if(i==0)
-				execvpResult = execvp (bufor[0], bufor);
-			else
-				execvpResult = execvp(bufor2[0], bufor2);
-			if(execvpResult == -1)
-			{
-				perror("execvp failed");
-				return;
-			}
-		}
-		//fork error handling
-		else if(pid < 0)
-		{
-			printf("Fork failed");
-			return;
-		}
-		// This is the parent process.
-		else
-		{
-			//FILE* stream;
-			// Close our copy of the read end of the file descriptor.
-			close (fds[0]);
-			// Convert the write file descriptor to a FILE object, and write to it.
-			close (fds[1]);
-			// Wait for the child process to finish (unless there was a & character)
-			if(!backgroundProcess)
-				waitpid (pid, NULL, 0);
-		}
-	}
-	return;
-}
-*/
 
 //Execvp (with fork), prints output to stdout
 void execToStdout(char** bufor,int bufferSize, int backgroundProcess)
