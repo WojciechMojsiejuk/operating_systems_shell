@@ -64,6 +64,11 @@ void execWithRedirect(char** bufor, int buferSize, char** bufor2, int bufer2Size
 	}
 	printf("\n");
 	#endif
+	if(buferSize <=0 || bufer2Size <=0)
+	{
+		printf("Invalid command\n");
+		return;
+	}
 	int fds[2];
 	pid_t pid, pid2;
 	/* Create a pipe. File descriptors for the two ends of the pipe are placed in fds. */
@@ -167,6 +172,11 @@ void execToStdout(char** bufor,int bufferSize, int backgroundProcess)
 	}
 	printf("\n");
 	#endif
+	if(bufferSize <=0)
+	{
+		printf("Invalid command\n");
+		return;
+	}
 	//printf("\nEND\n");
   	//printf("EXEC: %s\n",bufor[0]);
 	pid_t pid;
@@ -216,6 +226,11 @@ void execToFile(char** bufor, int buferSize, char* fileName, int backgroundProce
 	}
 	printf("\n");
 	#endif
+	if(buferSize <=0)
+	{
+		printf("Invalid command\n");
+		return;
+	}
 	int fds[2];
 	pid_t pid;
 	/* Create a pipe. File descriptors for the two ends of the pipe are placed in fds. */
@@ -251,7 +266,7 @@ void execToFile(char** bufor, int buferSize, char* fileName, int backgroundProce
 	//fork error handling
 	else if(pid < 0)
 	{
-		printf("Fork failed");
+		printf("Fork failed\n");
 		return;
 	}
 	/* This is the parent process. */
@@ -289,7 +304,7 @@ char* readLineFromCommandPrompt()
   if( read == -1)
     {
         perror(NULL);
-	return NULL;
+		return NULL;
     }
 	return line;
 }
@@ -870,8 +885,8 @@ void execute(char** command, int tokenCount)
 		#endif
 	}
 	
-  	free(first_buffer);
-  	free(second_buffer);
+  	//free(first_buffer);
+  	//free(second_buffer);
 	free(tokenType);
 }
 
