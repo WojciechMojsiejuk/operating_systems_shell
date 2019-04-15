@@ -2,7 +2,6 @@ a.txt
 main.c
 main.o
 Makefile
-queue
 queue.c
 queue.h
 queue.o
