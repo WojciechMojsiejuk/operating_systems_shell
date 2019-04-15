@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <pwd.h>
+#include <signal.h>
 #include "queue.h"
 
 
@@ -17,12 +18,10 @@ struct Queue q;
 
 void handler(int signum)
 {
-	if(signum == SIGQUIT)
+	if(signum == SIGQUIT || SIGINT)
 	{
-		/*
 		printf("To quit shell please use ctrl+d\n");
 		printf("Terminating\n");
-		*/
 		running = 0;
 	}
 	exit(signum);
@@ -135,8 +134,11 @@ void execWithRedirect(char** bufor, int buferSize, char** bufor2, int bufer2Size
 		/* Convert the write file descriptor to a FILE object, and write to it. */
 			close (fds[1]);
 			/* Wait for the child process to finish (unless there was a & character)*/
+			waitpid(pid, NULL, 0);
 			if(!backgroundProcess)
-				waitpid (pid, NULL, 0);
+			{
+				waitpid(pid2, NULL, 0);
+			}
 		}
 	}
 	return;
@@ -208,7 +210,9 @@ void execToStdout(char** bufor,int bufferSize, int backgroundProcess)
 	else
 	{
 		if(!backgroundProcess)
-			waitpid (pid, NULL, 0);
+		{
+			waitpid(pid, NULL, 0);
+		}
 	}
 	return;
 }
@@ -238,7 +242,7 @@ void execToFile(char** bufor, int buferSize, char* fileName, int backgroundProce
 	int fds[2];
 	pid_t pid;
 	/* Create a pipe. File descriptors for the two ends of the pipe are placed in fds. */
-	int pipeResult = pipe (fds);
+	int pipeResult = pipe(fds);
 	if(pipeResult == -1)
 	{
 		printf("Pipe failed\n");
@@ -749,7 +753,7 @@ void execute(char** command, int tokenCount)
 		#endif
 
 
-		execWithRedirect(first_buffer, -1, second_buffer, -1, 0);
+		execWithRedirect(first_buffer, j, second_buffer, k, 0);
 
 
 		int cleaningBufferIndex;
@@ -802,7 +806,7 @@ void execute(char** command, int tokenCount)
 
 
 		//TODO: Set valid buffer size
-		execToFile(first_buffer, -1, second_buffer[0], 0);
+		execToFile(first_buffer, j, second_buffer[0], 0);
 
 		int cleaningBufferIndex;
 		int swapBufferIterator;			
@@ -899,6 +903,14 @@ int main()
 	#ifdef DEBUG
 	printf("Using shell in debug mode!!\n");
 	#endif
+	if(signal(SIGQUIT, handler) == SIG_ERR)
+	{
+		printf("Can't catch SIGQUIT\n");
+	}
+	if(signal(SIGINT, handler) == SIG_ERR)
+	{
+		printf("Can't catch SIGINT\n");
+	}
 	//initialize queue
 	init(&q);
 	//get user home directory
@@ -959,7 +971,6 @@ if(read == -1)
 	free(line);
 }
 fclose(fp);
-signal(SIGQUIT, handler);
 while(running)
 {
 	#ifdef DEBUG
