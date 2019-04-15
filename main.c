@@ -19,6 +19,10 @@ void handler(int signum)
 {
 	if(signum == SIGQUIT)
 	{
+		/*
+		printf("To quit shell please use ctrl+d\n");
+		printf("Terminating\n");
+		*/
 		running = 0;
 	}
 	exit(signum);
@@ -956,7 +960,7 @@ if(read == -1)
 }
 fclose(fp);
 signal(SIGQUIT, handler);
-while(1)
+while(running)
 {
 	#ifdef DEBUG
 	printf("BEGINNING SHELL LOOP\n");
