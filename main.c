@@ -18,11 +18,10 @@ struct Queue q;
 
 void handler(int signum)
 {
-	if(signum == SIGQUIT || signum == SIGINT)
+	if(signum == SIGINT)
 	{
-		printf("To quit shell please use ctrl+d\n");
-		printf("Terminating\n");
 		running = 0;
+		signal(signum, handler);
 	}
 	//exit(signum);
 }
@@ -304,12 +303,12 @@ void execToFile(char** bufor, int buferSize, char* fileName, int backgroundProce
 //Return value: returns NULL on failure
 char* readLineFromCommandPrompt()
 {
-  ssize_t read;
-  size_t len = 0;
-  char *line = NULL;
+	ssize_t read;
+	size_t len = 0;
+	char *line = NULL;
 	//getline allocates the buffor (line*), it should be freed even if getline failed
-  read = getline(&line, &len, stdin);
-  if( read == -1)
+	read = getline(&line, &len, stdin);
+	if( read == -1)
     {
         perror(NULL);
 		return NULL;
@@ -908,10 +907,6 @@ int main()
 	#ifdef DEBUG
 	printf("Using shell in debug mode!!\n");
 	#endif
-	if(signal(SIGQUIT, handler) == SIG_ERR)
-	{
-		printf("Can't catch SIGQUIT\n");
-	}
 	if(signal(SIGINT, handler) == SIG_ERR)
 	{
 		printf("Can't catch SIGINT\n");
@@ -983,7 +978,7 @@ while(running)
 	#endif
 	printCommandPrompt();
 	char* userResponse = readLineFromCommandPrompt();
-	//EOF character
+	//EOF character from console
 	if(userResponse == NULL)
 	{
 		//fprintf(stderr, "readLineFromCommandPrompt() failed\n");
@@ -1018,7 +1013,12 @@ while(running)
 	  //delete old history
 	  pop(&q);
 	}
-	  push(&q, currentCommand);
+	//If string empty or first char is \n then we do not want to add it to history
+	if(currentCommand != NULL)
+	{
+		if(currentCommand[0] != '\0' && currentCommand[0] != '\n')
+			push(&q, currentCommand);
+	}
 	  // printf("NIE DZIAŁA");
 		// //Free allocated memory
 	  // //HELP: https://stackoverflow.com/questions/13148119/what-does-pointer-being-freed-was-not-allocated-mean-exactly
@@ -1032,6 +1032,7 @@ while(running)
 	// free(currentCommand);
 
 }
+printf("Terminating shell\n");
 #ifdef DEBUG
 printf("After main loop\n");
 #endif
@@ -1041,16 +1042,16 @@ if(fp == NULL)
 	perror(NULL);
 	exit(EXIT_FAILURE); //CZY TO OK?*/
 }
-#ifdef DEBUG
-printf("Current queue: \n");
-#endif
+//#ifdef DEBUG
+printf("Log history: \n");
+//#endif
 while(front(&q)!=NULL)
 {
 	fprintf(fp,"%s",front(&q));
-	#ifdef DEBUG
+	//#ifdef DEBUG
 	printf("%s",front(&q));
-	#endif
-	 pop(&q);
+	//#endif
+	pop(&q);
 }
 fclose(fp);
 return 0;
