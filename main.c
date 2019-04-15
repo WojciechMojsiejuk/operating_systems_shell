@@ -1,5 +1,5 @@
 #define _GNU_SOURCE
-#define DEBUG
+//#define DEBUG
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -364,6 +364,7 @@ void execute(char** command, int tokenCount)
 	printf("\nTokenCount: %d\n",tokenCount);
 	#endif
 	int i;
+	int backgroundProcess = 0;
 	//Create table with types
 	int* tokenType = (int*)malloc(tokenCount * sizeof(int));
 	if(tokenType==NULL)
@@ -385,6 +386,7 @@ void execute(char** command, int tokenCount)
 			printf("Command: %s is &\n",command[i]);
 			#endif			
 			tokenType[i] = 5;
+			backgroundProcess = 1;
 		}
 		//Pipe
 		else if(tokenLength == 1 && command[i][0] == '|')
@@ -508,7 +510,7 @@ void execute(char** command, int tokenCount)
 				#endif
 
 
-	      			execWithRedirect(first_buffer, j, second_buffer, k, 0);
+	      			execWithRedirect(first_buffer, j, second_buffer, k, backgroundProcess);
 
 
 				int cleaningBufferIndex;
@@ -563,7 +565,7 @@ void execute(char** command, int tokenCount)
 
 
 				//TODO: set valid tokenSize
-		  		execToFile(first_buffer, j, second_buffer[0], 0);
+		  		execToFile(first_buffer, j, second_buffer[0], backgroundProcess);
 
 
 				int cleaningBufferIndex;
@@ -632,7 +634,7 @@ void execute(char** command, int tokenCount)
 				printf("\nCalling function execWithRedirect...\n");
 				#endif
 
-				execWithRedirect(first_buffer,j, second_buffer,k, 0);
+				execWithRedirect(first_buffer,j, second_buffer,k, backgroundProcess);
 
 
 				int cleaningBufferIndex;
@@ -683,7 +685,7 @@ void execute(char** command, int tokenCount)
 				printf("\nCalling function execToFile...\n");
 				#endif
 
-				execToFile(first_buffer, j, second_buffer[0], 0);
+				execToFile(first_buffer, j, second_buffer[0], backgroundProcess);
 
 
 				int cleaningBufferIndex;
@@ -755,7 +757,7 @@ void execute(char** command, int tokenCount)
 		#endif
 
 
-		execWithRedirect(first_buffer, j, second_buffer, k, 0);
+		execWithRedirect(first_buffer, j, second_buffer, k, backgroundProcess);
 
 
 		int cleaningBufferIndex;
@@ -807,7 +809,7 @@ void execute(char** command, int tokenCount)
 		printf("\nCalling function execToFile...\n");
 		#endif
 
-		execToFile(first_buffer, j, second_buffer[0], 0);
+		execToFile(first_buffer, j, second_buffer[0], backgroundProcess);
 
 		int cleaningBufferIndex;
 		//int swapBufferIterator;			
@@ -859,7 +861,7 @@ void execute(char** command, int tokenCount)
 		printf("\nCalling function execToStdout...\n");
 		#endif
 
-		execToStdout(first_buffer,i,0);	
+		execToStdout(first_buffer,i,backgroundProcess);	
 
 		int cleaningBufferIndex;
 		//int swapBufferIterator;			
