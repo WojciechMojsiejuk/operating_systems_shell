@@ -1,0 +1,5 @@
+#!/bin/bash
+me=`basename "$0"` 
+./shell me
+echo Halo
+ls -l

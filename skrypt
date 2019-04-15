@@ -1,0 +1,4 @@
+#!/bin/bash
+./shell ${0}
+ls -l
+echo Witaj
