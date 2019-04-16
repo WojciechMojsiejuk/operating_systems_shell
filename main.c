@@ -18,10 +18,7 @@ struct Queue q;
 
 void handler(int signum)
 {
-	if(signum == SIGQUIT || signum == SIGINT)
 	{
-		printf("To quit shell please use ctrl+d\n");
-		printf("Terminating\n");
 		running = 0;
 	}
 	//exit(signum);
@@ -304,12 +301,7 @@ void execToFile(char** bufor, int buferSize, char* fileName, int backgroundProce
 //Return value: returns NULL on failure
 char* readLineFromCommandPrompt()
 {
-  ssize_t read;
-  size_t len = 0;
-  char *line = NULL;
 	//getline allocates the buffor (line*), it should be freed even if getline failed
-  read = getline(&line, &len, stdin);
-  if( read == -1)
     {
         perror(NULL);
 		return NULL;
@@ -988,7 +980,6 @@ while(running)
 	#endif
 	printCommandPrompt();
 	char* userResponse = readLineFromCommandPrompt();
-	//EOF character
 	if(userResponse == NULL)
 	{
 		//fprintf(stderr, "readLineFromCommandPrompt() failed\n");
@@ -1023,7 +1014,6 @@ while(running)
 	  //delete old history
 	  pop(&q);
 	}
-	  push(&q, currentCommand);
 	  // printf("NIE DZIAŁA");
 		// //Free allocated memory
 	  // //HELP: https://stackoverflow.com/questions/13148119/what-does-pointer-being-freed-was-not-allocated-mean-exactly
@@ -1128,16 +1118,12 @@ if(fp == NULL)
 	perror(NULL);
 	exit(EXIT_FAILURE); //CZY TO OK?*/
 }
-#ifdef DEBUG
-printf("Current queue: \n");
-#endif
 while(front(&q)!=NULL)
 {
 	fprintf(fp,"%s",front(&q));
-	#ifdef DEBUG
 	printf("%s",front(&q));
-	#endif
 	 pop(&q);
+	pop(&q);
 }
 fclose(fp);
 return 0;
