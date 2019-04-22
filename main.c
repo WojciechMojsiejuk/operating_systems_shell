@@ -18,7 +18,10 @@ struct Queue q;
 
 void handler(int signum)
 {
+	if(signum == SIGQUIT || signum == SIGINT)
 	{
+		printf("To quit shell please use ctrl+d\n");
+		printf("Terminating\n");
 		running = 0;
 	}
 	//exit(signum);
@@ -301,7 +304,12 @@ void execToFile(char** bufor, int buferSize, char* fileName, int backgroundProce
 //Return value: returns NULL on failure
 char* readLineFromCommandPrompt()
 {
+  ssize_t read;
+  size_t len = 0;
+  char *line = NULL;
 	//getline allocates the buffor (line*), it should be freed even if getline failed
+  read = getline(&line, &len, stdin);
+  if( read == -1)
     {
         perror(NULL);
 		return NULL;
@@ -969,7 +977,6 @@ if(read == -1)
 fclose(fp);
 #ifdef DEBUG
   printf("Checking if script was launched from different file...\n");
-  printf("First argument of main function: %s\n",argv[0]);
 #endif
 if(argc==1)
 {
@@ -980,6 +987,7 @@ while(running)
 	#endif
 	printCommandPrompt();
 	char* userResponse = readLineFromCommandPrompt();
+	//EOF character
 	if(userResponse == NULL)
 	{
 		//fprintf(stderr, "readLineFromCommandPrompt() failed\n");
@@ -1014,6 +1022,7 @@ while(running)
 	  //delete old history
 	  pop(&q);
 	}
+	  push(&q, currentCommand);
 	  // printf("NIE DZIAŁA");
 		// //Free allocated memory
 	  // //HELP: https://stackoverflow.com/questions/13148119/what-does-pointer-being-freed-was-not-allocated-mean-exactly
@@ -1040,7 +1049,7 @@ else
   #ifdef DEBUG
 	printf("Path to bash file: %s\n",argv[1]);
 	#endif
-	fileFromBash = fopen(argv[1], "rb+");
+	fileFromBash = fopen(argv[1], "r+");
 	if(fileFromBash == NULL)
 	{
 		perror(argv[0]);
@@ -1050,15 +1059,10 @@ else
 	printf("Opened bash log!\n");
 	#endif
   //omit file header
-  int skipHeader;
-  for(skipHeader=0;skipHeader<2;skipHeader++)
-  {
-    fileFromBashRead = getline(&fileFromBashLine, &fileFromBashLen, fileFromBash);
-    free(fileFromBashLine);
-    fileFromBashLine=NULL;
-    fileFromBashLen=0;
-  }
-
+  fileFromBashRead = getline(&fileFromBashLine, &fileFromBashLen, fileFromBash);
+  free(fileFromBashLine);
+  fileFromBashLine=NULL;
+  fileFromBashLen=0;
 	while ((fileFromBashRead = getline(&fileFromBashLine, &fileFromBashLen, fileFromBash)) > 0)
 	{
 
@@ -1118,12 +1122,16 @@ if(fp == NULL)
 	perror(NULL);
 	exit(EXIT_FAILURE); //CZY TO OK?*/
 }
+#ifdef DEBUG
+printf("Current queue: \n");
+#endif
 while(front(&q)!=NULL)
 {
 	fprintf(fp,"%s",front(&q));
+	#ifdef DEBUG
 	printf("%s",front(&q));
+	#endif
 	 pop(&q);
-	pop(&q);
 }
 fclose(fp);
 return 0;

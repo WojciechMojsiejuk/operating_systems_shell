@@ -1,0 +1,16 @@
+Makefile
+a.out
+a.txt
+c.txt
+main.c
+main.o
+mojamuszelka
+muszla
+queue
+queue.c
+queue.h
+queue.o
+requirements.txt
+shell
+skrypt
+tempFile
