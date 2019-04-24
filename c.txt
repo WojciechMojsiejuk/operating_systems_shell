@@ -1,8 +1,9 @@
+Makefile
+a.out
 a.txt
 c.txt
 main.c
 main.o
-Makefile
 mojamuszelka
 muszla
 queue

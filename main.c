@@ -20,8 +20,11 @@ void handler(int signum)
 {
 	if(signum == SIGINT)
 	{
+		/*
+		printf("To quit shell please use ctrl+d\n");
+		printf("Terminating\n");
+		*/
 		running = 0;
-		signal(signum, handler);
 	}
 	//exit(signum);
 }
@@ -145,19 +148,7 @@ void execWithRedirect(char** bufor, int buferSize, char** bufor2, int bufer2Size
 
 //Execvp (with fork), prints output to stdout
 void execToStdout(char** bufor,int bufferSize, int backgroundProcess)
-{	
-/*
-	printf("%d", bufferSize);
-  char** restrictedBuffer=(char**)malloc((bufferSize+1)*sizeof(char*));
-  int i=0;
-  for(;i<bufferSize;i++)
-  {
-    restrictedBuffer[i]=bufor[i];
-	//strcpy(restrictedBuffer[i],bufor[i]);
-  }
-  // strcpy(restrictedBuffer[i],bufor[i]);
-  restrictedBuffer[i+1]=NULL;
-	printf("ALL EXECVP ARGS: \n");*/
+{
 	#ifdef DEBUG
 	printf("In execToStdout() function:\n");
 	printf("\tbuferSize: %d\n", bufferSize);
@@ -169,11 +160,6 @@ void execToStdout(char** bufor,int bufferSize, int backgroundProcess)
 			printf("NULL ");
 		else
 			printf("%s ", bufor[testIter]);
-		//printf("%s ", bufor[tes
-		/*if(restrictedBuffer[testIter] == NULL)
-			printf("NULL ");
-		else
-			printf("%s ", restrictedBuffer[testIter]);*/
 	}
 	printf("\n");
 	#endif
@@ -282,14 +268,6 @@ void execToFile(char** bufor, int buferSize, char* fileName, int backgroundProce
 		//FILE* stream;
 		/* Close our copy of the read end of the file descriptor. */
 		close (fds[0]);
-		// /* Convert the write file descriptor to a FILE object, and write to it. */
-		// stream = fdopen (fds[1], "w");
-		// fprintf (stream, "This is a test.\n");
-		// fprintf (stream, "Hello, world.\n");
-		// fprintf (stream, "My dog has fleas.\n");
-		// fprintf (stream, "This program is great.\n");
-		// fprintf (stream, "One fish, two fish.\n");
-		// fflush (stream);
 		close (fds[1]);
 		/* Wait for the child process to finish (unless there was a & character)*/
 		if(!backgroundProcess)
@@ -303,12 +281,12 @@ void execToFile(char** bufor, int buferSize, char* fileName, int backgroundProce
 //Return value: returns NULL on failure
 char* readLineFromCommandPrompt()
 {
-	ssize_t read;
-	size_t len = 0;
-	char *line = NULL;
+  ssize_t read;
+  size_t len = 0;
+  char *line = NULL;
 	//getline allocates the buffor (line*), it should be freed even if getline failed
 	read = getline(&line, &len, stdin);
-	if( read == -1)
+  if( read == -1)
     {
         perror(NULL);
 		return NULL;
@@ -322,7 +300,7 @@ char* readLineFromCommandPrompt()
 char** getTokens(char* line, int *tokenCount)
 {
 	char* delim = " \t\r\n\a";
-  int bufsize = 64, position = 0;
+  int bufsize = 128, position = 0;
   char **tokens = (char**)malloc(bufsize * sizeof(char*));
   char *token = NULL;
   //printf("%s\n",line);
@@ -331,7 +309,6 @@ char** getTokens(char* line, int *tokenCount)
   {
     tokens[position] = token;
     position++;
-	//TODO: Reallocate memory here
 	if(position >= bufsize)
 	{
 		fprintf(stderr, "getTokens: position out of range\n");
@@ -354,7 +331,7 @@ char** getTokens(char* line, int *tokenCount)
 }
 
 void execute(char** command, int tokenCount)
-{	
+{
 	#ifdef DEBUG
 	printf("Command to execute: ");
 	int debugCommandIterator = 0;
@@ -363,7 +340,7 @@ void execute(char** command, int tokenCount)
 	printf("\nTokenCount: %d\n",tokenCount);
 	#endif
 	int i;
-	int backgroundProcess = 0;
+	int backgroundProcess = 0; //by default set this flag to false
 	//Create table with types
 	int* tokenType = (int*)malloc(tokenCount * sizeof(int));
 	if(tokenType==NULL)
@@ -383,7 +360,7 @@ void execute(char** command, int tokenCount)
 		{
 			#ifdef DEBUG
 			printf("Command: %s is &\n",command[i]);
-			#endif			
+			#endif
 			tokenType[i] = 5;
 			backgroundProcess = 1;
 		}
@@ -451,12 +428,11 @@ void execute(char** command, int tokenCount)
 	char** second_buffer = calloc(tokenCount, sizeof(char*));
 	int is_pipe=0; //by default set this flag to false
 	int is_redirect=0;  //by default set this flag to false
-	int is_background_process=0; //by default set this flag to false
 	int j=0; //first_buffer's index
 	int k=0; //second_buffer's index
 	for (i = 0; i < tokenCount; i++)
 	{
-		
+
 		//fill buffers
 		if (tokenType[i]==3 || tokenType[i]==4)
 		{
@@ -502,7 +478,7 @@ void execute(char** command, int tokenCount)
 				int debugExecWithRedirectIterator;
 				for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<j;debugExecWithRedirectIterator++)
 					printf("%s ",first_buffer[debugExecWithRedirectIterator]);
-				printf("\nSecond buffer:");			
+				printf("\nSecond buffer:");
 				for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<k;debugExecWithRedirectIterator++)
 					printf("%s ",second_buffer[debugExecWithRedirectIterator]);
 				printf("\nCalling function execWithRedirect...\n");
@@ -513,25 +489,25 @@ void execute(char** command, int tokenCount)
 
 
 				int cleaningBufferIndex;
-				//int swapBufferIterator;			
+				//int swapBufferIterator;
 				#ifdef DEBUG
 				printf("Swapping buffers...\n");
 				#endif
-				
+
 				//Clear first buffer
 				for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
 					first_buffer[cleaningBufferIndex]=NULL;
 				//Swaping all content from second buffer to the first one
 /*				for(swapBufferIterator=0;second_buffer[swapBufferIterator]!=NULL;swapBufferIterator++)
-				{					
+				{
 					first_buffer[swapBufferIterator]=second_buffer[swapBufferIterator];
 				}
-*/			
+*/
 				//Clear second buffer
-			
+
 				for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
 					second_buffer[cleaningBufferIndex]=NULL;
-				free(second_buffer);			
+				free(second_buffer);
 				//Set the index of first buffer onto value of second's
 				j=k;
 				//reset index of second buffer
@@ -541,7 +517,7 @@ void execute(char** command, int tokenCount)
 				int debugSwapBufferIterator;
 				for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
 					printf("%s ",first_buffer[debugSwapBufferIterator]);
-				printf("\nSecond buffer:");			
+				printf("\nSecond buffer:");
 				for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
 					printf("%s ",second_buffer[debugSwapBufferIterator]);
 				printf("\nEnd execWithRedirect case...\n");
@@ -549,26 +525,25 @@ void execute(char** command, int tokenCount)
 			}
 			//CASE: a>>B|
 			if(is_redirect==2)
-			{	
+			{
 				//Call execWithFile function because we reached pipe
 				#ifdef DEBUG
 				printf("First buffer:");
 				int debugExecWithRedirectIterator;
 				for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<j;debugExecWithRedirectIterator++)
 					printf("%s ",first_buffer[debugExecWithRedirectIterator]);
-				printf("\nSecond buffer:");			
+				printf("\nSecond buffer:");
 				for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<k;debugExecWithRedirectIterator++)
 					printf("%s ",second_buffer[debugExecWithRedirectIterator]);
 				printf("\nCalling function execWithFile...\n");
 				#endif
 
 
-				//TODO: set valid tokenSize
 		  		execToFile(first_buffer, j, second_buffer[0], backgroundProcess);
 
 
 				int cleaningBufferIndex;
-				//int swapBufferIterator;			
+				//int swapBufferIterator;
 				#ifdef DEBUG
 				printf("Swapping buffers...\n");
 				#endif
@@ -577,15 +552,15 @@ void execute(char** command, int tokenCount)
 					first_buffer[cleaningBufferIndex]=NULL;
 				//Swaping all content from second buffer to the first one
 	/*			for(swapBufferIterator=0;second_buffer[swapBufferIterator]!=NULL;swapBufferIterator++)
-				{					
+				{
 					first_buffer[swapBufferIterator]=second_buffer[swapBufferIterator];
 				}
-		*/	
+		*/
 				//Clear second buffer
-			
+
 				for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
 					second_buffer[cleaningBufferIndex]=NULL;
-				free(second_buffer);			
+				free(second_buffer);
 				//Set the index of first buffer onto value of second's
 				j=k;
 				//reset index of second buffer
@@ -595,7 +570,7 @@ void execute(char** command, int tokenCount)
 				int debugSwapBufferIterator;
 				for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
 					printf("%s ",first_buffer[debugSwapBufferIterator]);
-				printf("\nSecond buffer:");			
+				printf("\nSecond buffer:");
 				for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
 					printf("%s ",second_buffer[debugSwapBufferIterator]);
 				printf("\nEnd execWithFile case...\n");
@@ -610,24 +585,13 @@ void execute(char** command, int tokenCount)
 			//CASE: a>>b|
 			if(is_pipe==1)
 			{
-				//DEBUG CODE
-				/*
-				int l;
-				printf("DEBUG REDIRECT\n");
-				for(l=0;l<tokenCount;l++)
-				{
-				printf("1: %s", first_buffer[l]);
-				printf("2: %s", second_buffer[l]);
-				}
-				*/
-				//DEBUG END
 				//Call execWithRedirect function because we reached pipe
 				#ifdef DEBUG
 				printf("First buffer:");
 				int debugExecWithRedirectIterator;
 				for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<j;debugExecWithRedirectIterator++)
 					printf("%s ",first_buffer[debugExecWithRedirectIterator]);
-				printf("\nSecond buffer:");			
+				printf("\nSecond buffer:");
 				for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<k;debugExecWithRedirectIterator++)
 					printf("%s ",second_buffer[debugExecWithRedirectIterator]);
 				printf("\nCalling function execWithRedirect...\n");
@@ -637,7 +601,7 @@ void execute(char** command, int tokenCount)
 
 
 				int cleaningBufferIndex;
-				//int swapBufferIterator;			
+				//int swapBufferIterator;
 				#ifdef DEBUG
 				printf("Swapping buffers...\n");
 				#endif
@@ -646,15 +610,15 @@ void execute(char** command, int tokenCount)
 					first_buffer[cleaningBufferIndex]=NULL;
 				//Swaping all content from second buffer to the first one
 	/*			for(swapBufferIterator=0;second_buffer[swapBufferIterator]!=NULL;swapBufferIterator++)
-				{					
+				{
 					first_buffer[swapBufferIterator]=second_buffer[swapBufferIterator];
 				}
-	*/		
+	*/
 				//Clear second buffer
-			
+
 				for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
 					second_buffer[cleaningBufferIndex]=NULL;
-				free(second_buffer);			
+				free(second_buffer);
 				//Set the index of first buffer onto value of second's
 				j=k;
 				//reset index of second buffer
@@ -664,7 +628,7 @@ void execute(char** command, int tokenCount)
 				int debugSwapBufferIterator;
 				for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
 					printf("%s ",first_buffer[debugSwapBufferIterator]);
-				printf("\nSecond buffer:");			
+				printf("\nSecond buffer:");
 				for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
 					printf("%s ",second_buffer[debugSwapBufferIterator]);
 				printf("\nEnd execWithRedirect case...\n");
@@ -678,7 +642,7 @@ void execute(char** command, int tokenCount)
 				int debugExecWithRedirectIterator;
 				for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<j;debugExecWithRedirectIterator++)
 					printf("%s ",first_buffer[debugExecWithRedirectIterator]);
-				printf("\nSecond buffer:");			
+				printf("\nSecond buffer:");
 				for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<k;debugExecWithRedirectIterator++)
 					printf("%s ",second_buffer[debugExecWithRedirectIterator]);
 				printf("\nCalling function execToFile...\n");
@@ -688,7 +652,7 @@ void execute(char** command, int tokenCount)
 
 
 				int cleaningBufferIndex;
-				//int swapBufferIterator;			
+				//int swapBufferIterator;
 				#ifdef DEBUG
 				printf("Swapping buffers...\n");
 				#endif
@@ -698,15 +662,15 @@ void execute(char** command, int tokenCount)
 /*
 				//Swaping all content from second buffer to the first one
 				for(swapBufferIterator=0;second_buffer[swapBufferIterator]!=NULL;swapBufferIterator++)
-				{					
+				{
 					first_buffer[swapBufferIterator]=second_buffer[swapBufferIterator];
 				}
-*/		
+*/
 				//Clear second buffer
-			
+
 				for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
 					second_buffer[cleaningBufferIndex]=NULL;
-				free(second_buffer);			
+				free(second_buffer);
 				//Set the index of first buffer onto value of second's
 				j=k;
 				//reset index of second buffer
@@ -716,7 +680,7 @@ void execute(char** command, int tokenCount)
 				int debugSwapBufferIterator;
 				for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
 					printf("%s ",first_buffer[debugSwapBufferIterator]);
-				printf("\nSecond buffer:");			
+				printf("\nSecond buffer:");
 				for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
 					printf("%s ",second_buffer[debugSwapBufferIterator]);
 				printf("\nEnd execToFile case...\n");
@@ -724,32 +688,19 @@ void execute(char** command, int tokenCount)
 			}
 		  	is_redirect=2;
 		}
-      		
+
   	}
 	//if we reached end of command
 
 	//CASE: a|b
         if(is_pipe==1)
 	{
-		//DEBUG CODE
-			/*
-		int l;
-		printf("DEBUG REDIRECT\n");
-		for(l=0;l<tokenCount;l++)
-		{
-			printf("1: %s", first_buffer[l]);
-			printf("2: %s", second_buffer[l]);
-		}
-			*/
-		//DEBUG END
-		//wywolaj funkcje bo doszlismy do drugiego pipe'a
-			//TODO: Set valid buffers size
 		#ifdef DEBUG
 		printf("First buffer:");
 		int debugExecWithRedirectIterator;
 		for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<j;debugExecWithRedirectIterator++)
 			printf("%s ",first_buffer[debugExecWithRedirectIterator]);
-		printf("\nSecond buffer:");			
+		printf("\nSecond buffer:");
 		for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<k;debugExecWithRedirectIterator++)
 			printf("%s ",second_buffer[debugExecWithRedirectIterator]);
 		printf("\nCalling function execWithRedirect...\n");
@@ -760,7 +711,7 @@ void execute(char** command, int tokenCount)
 
 
 		int cleaningBufferIndex;
-		//int swapBufferIterator;			
+		//int swapBufferIterator;
 		#ifdef DEBUG
 		printf("Swapping buffers...\n");
 		#endif
@@ -770,15 +721,15 @@ void execute(char** command, int tokenCount)
 /*
 				//Swaping all content from second buffer to the first one
 				for(swapBufferIterator=0;second_buffer[swapBufferIterator]!=NULL;swapBufferIterator++)
-				{					
+				{
 					first_buffer[swapBufferIterator]=second_buffer[swapBufferIterator];
 				}
-*/	
+*/
 		//Clear second buffer
-	
+
 		for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
 			second_buffer[cleaningBufferIndex]=NULL;
-		free(second_buffer);			
+		free(second_buffer);
 		//Set the index of first buffer onto value of second's
 		j=k;
 		//reset index of second buffer
@@ -788,7 +739,7 @@ void execute(char** command, int tokenCount)
 		int debugSwapBufferIterator;
 		for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
 			printf("%s ",first_buffer[debugSwapBufferIterator]);
-		printf("\nSecond buffer:");			
+		printf("\nSecond buffer:");
 		for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
 			printf("%s ",second_buffer[debugSwapBufferIterator]);
 		printf("\nEnd execWithRedirect case...\n");
@@ -802,7 +753,7 @@ void execute(char** command, int tokenCount)
 		int debugExecWithRedirectIterator;
 		for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<j;debugExecWithRedirectIterator++)
 			printf("%s ",first_buffer[debugExecWithRedirectIterator]);
-		printf("\nSecond buffer:");			
+		printf("\nSecond buffer:");
 		for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<k;debugExecWithRedirectIterator++)
 			printf("%s ",second_buffer[debugExecWithRedirectIterator]);
 		printf("\nCalling function execToFile...\n");
@@ -811,7 +762,7 @@ void execute(char** command, int tokenCount)
 		execToFile(first_buffer, j, second_buffer[0], backgroundProcess);
 
 		int cleaningBufferIndex;
-		//int swapBufferIterator;			
+		//int swapBufferIterator;
 		#ifdef DEBUG
 		printf("Swapping buffers...\n");
 		#endif
@@ -821,15 +772,15 @@ void execute(char** command, int tokenCount)
 /*
 		//Swaping all content from second buffer to the first one
 		for(swapBufferIterator=0;second_buffer[swapBufferIterator]!=NULL;swapBufferIterator++)
-		{					
+		{
 			first_buffer[swapBufferIterator]=second_buffer[swapBufferIterator];
 		}
-*/	
+*/
 		//Clear second buffer
-	
+
 		for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
 			second_buffer[cleaningBufferIndex]=NULL;
-		free(second_buffer);			
+		free(second_buffer);
 		//Set the index of first buffer onto value of second's
 		j=k;
 		//reset index of second buffer
@@ -839,7 +790,7 @@ void execute(char** command, int tokenCount)
 		int debugSwapBufferIterator;
 		for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
 			printf("%s ",first_buffer[debugSwapBufferIterator]);
-		printf("\nSecond buffer:");			
+		printf("\nSecond buffer:");
 		for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
 			printf("%s ",second_buffer[debugSwapBufferIterator]);
 		printf("\nEnd execToFile case...\n");
@@ -854,16 +805,16 @@ void execute(char** command, int tokenCount)
 		int debugExecWithRedirectIterator;
 		for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<j;debugExecWithRedirectIterator++)
 			printf("%s ",first_buffer[debugExecWithRedirectIterator]);
-		printf("\nSecond buffer:");			
+		printf("\nSecond buffer:");
 		for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<k;debugExecWithRedirectIterator++)
 			printf("%s ",second_buffer[debugExecWithRedirectIterator]);
 		printf("\nCalling function execToStdout...\n");
 		#endif
 
-		execToStdout(first_buffer,i,backgroundProcess);	
+		execToStdout(first_buffer,i,backgroundProcess);
 
 		int cleaningBufferIndex;
-		//int swapBufferIterator;			
+		//int swapBufferIterator;
 		#ifdef DEBUG
 		printf("Swapping buffers...\n");
 		#endif
@@ -872,15 +823,15 @@ void execute(char** command, int tokenCount)
 /*
 		//Swaping all content from second buffer to the first one
 		for(swapBufferIterator=0;second_buffer[swapBufferIterator]!=NULL;swapBufferIterator++)
-		{					
+		{
 			first_buffer[swapBufferIterator]=second_buffer[swapBufferIterator];
 		}
 	*/
 		//Clear second buffer
-	
+
 		for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
 			second_buffer[cleaningBufferIndex]=NULL;
-		free(second_buffer);			
+		free(second_buffer);
 		//Set the index of first buffer onto value of second's
 		j=k;
 		//reset index of second buffer
@@ -890,23 +841,27 @@ void execute(char** command, int tokenCount)
 		int debugSwapBufferIterator;
 		for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
 			printf("%s ",first_buffer[debugSwapBufferIterator]);
-		printf("\nSecond buffer:");			
+		printf("\nSecond buffer:");
 		for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
 			printf("%s ",second_buffer[debugSwapBufferIterator]);
 		printf("\nEnd execToFile case...\n");
 		#endif
 	}
-	
+
   	//free(first_buffer);
   	//free(second_buffer);
 	free(tokenType);
 }
 
-int main()
+int main(int argc, char* argv[])
 {
 	#ifdef DEBUG
 	printf("Using shell in debug mode!!\n");
 	#endif
+	if(signal(SIGQUIT, handler) == SIG_ERR)
+	{
+		printf("Can't catch SIGQUIT\n");
+	}
 	if(signal(SIGINT, handler) == SIG_ERR)
 	{
 		printf("Can't catch SIGINT\n");
@@ -946,13 +901,13 @@ int main()
 			perror(pathToShellLogFile);
 			exit(EXIT_FAILURE);
 	      	}
-	} 
+	}
 	printf("Opened file log!\n");
 	while ((read = getline(&line, &len, fp)) > 0)
 	{
 		//initialize queue with values from log file
-		size_t length = strlen(line);
-		/*if((length > 0) && (line[length-1] == '\n'))
+		/*size_t length = strlen(line);
+		if((length > 0) && (line[length-1] == '\n'))
 		{
 			line[length-1] ='\0';
 		}*/
@@ -971,6 +926,11 @@ if(read == -1)
 	free(line);
 }
 fclose(fp);
+#ifdef DEBUG
+  printf("Checking if script was launched from different file...\n");
+#endif
+if(argc==1)
+{
 while(running)
 {
 	#ifdef DEBUG
@@ -978,11 +938,9 @@ while(running)
 	#endif
 	printCommandPrompt();
 	char* userResponse = readLineFromCommandPrompt();
-	//EOF character from console
+	//EOF character
 	if(userResponse == NULL)
 	{
-		//fprintf(stderr, "readLineFromCommandPrompt() failed\n");
-		//printf("EOF?\n");
 		break;
 	}
 	char* currentCommand=malloc(strlen(userResponse)+1);
@@ -1013,12 +971,8 @@ while(running)
 	  //delete old history
 	  pop(&q);
 	}
-	//If string empty or first char is \n then we do not want to add it to history
-	if(currentCommand != NULL)
-	{
-		if(currentCommand[0] != '\0' && currentCommand[0] != '\n')
-			push(&q, currentCommand);
-	}
+	if(currentCommand[0] != '\0' && currentCommand[0] != '\n')
+		push(&q, currentCommand);
 	  // printf("NIE DZIAŁA");
 		// //Free allocated memory
 	  // //HELP: https://stackoverflow.com/questions/13148119/what-does-pointer-being-freed-was-not-allocated-mean-exactly
@@ -1030,9 +984,85 @@ while(running)
 	 free(tokens);
 	 free(userResponse);
 	// free(currentCommand);
+  }
+}
+else
+{
+  #ifdef DEBUG
+	printf("Shell launched from bash file!\n");
+	#endif
+  FILE *fileFromBash;
+	char *fileFromBashLine = NULL;
+	size_t fileFromBashLen = 0;
+	ssize_t fileFromBashRead;
+
+  #ifdef DEBUG
+	printf("Path to bash file: %s\n",argv[1]);
+	#endif
+	fileFromBash = fopen(argv[1], "r+");
+	if(fileFromBash == NULL)
+	{
+		perror(argv[0]);
+		exit(EXIT_FAILURE);
+	}
+  #ifdef DEBUG
+	printf("Opened bash log!\n");
+	#endif
+  //omit file header
+  fileFromBashRead = getline(&fileFromBashLine, &fileFromBashLen, fileFromBash);
+  free(fileFromBashLine);
+  fileFromBashLine=NULL;
+  fileFromBashLen=0;
+	while ((fileFromBashRead = getline(&fileFromBashLine, &fileFromBashLen, fileFromBash)) > 0)
+	{
+
+		#ifdef DEBUG
+		printf("Line from bash file: %s\n", fileFromBashLine);
+		#endif
+
+    char* bashLine = fileFromBashLine;
+  	//EOF character
+  	if(bashLine == NULL)
+  	{
+  		break;
+  	}
+  	char* currentBashCommand=malloc(strlen(bashLine)+1);
+  	strcpy(currentBashCommand,bashLine);
+  	int bashTokenCount = 0;
+  	char** bashTokens = getTokens(bashLine, &bashTokenCount);
+  	if(bashTokens == NULL)
+  	{
+  		fprintf(stderr, "getTokens() failed\n");
+  		return 2;
+  	}
+  	//TODO: FIX THIS
+  	#ifdef DEBUG
+  	int i;
+  	printf("Tokens get: ");
+  	for(i=0;i<bashTokenCount;i++)
+  		printf("%s ",bashTokens[i]);
+  	printf("\n");
+  	#endif
+  	//Execute
+  	execute(bashTokens, bashTokenCount);
+  	#ifdef DEBUG
+  	printf("AFTER EXECUTE() FUNCTION\n");
+  	#endif
+  	//add command to history queue
+  	if(current_queue_size(&q)==20)
+  	{
+  	  //delete old history
+  	  pop(&q);
+  	}
+  	  push(&q, currentBashCommand);
+  	 free(bashTokens);
+    free(fileFromBashLine);
+    fileFromBashLine=NULL;
+    fileFromBashLen=0;
+
+  }
 
 }
-printf("Terminating shell\n");
 #ifdef DEBUG
 printf("After main loop\n");
 #endif
@@ -1042,16 +1072,16 @@ if(fp == NULL)
 	perror(NULL);
 	exit(EXIT_FAILURE); //CZY TO OK?*/
 }
-//#ifdef DEBUG
-printf("Log history: \n");
-//#endif
+#ifdef DEBUG
+printf("Current queue: \n");
+#endif
 while(front(&q)!=NULL)
 {
 	fprintf(fp,"%s",front(&q));
-	//#ifdef DEBUG
+	#ifdef DEBUG
 	printf("%s",front(&q));
-	//#endif
-	pop(&q);
+	#endif
+	 pop(&q);
 }
 fclose(fp);
 return 0;
