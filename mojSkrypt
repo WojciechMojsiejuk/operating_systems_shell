@@ -1,0 +1,9 @@
+#!./shell
+echo Witaj
+ls -l
+ls
+cat main.c | grep main
+cat main.c | grep main | wc
+cat main.c | grep main | wc | less
+cat main.c >> zeSkryptu.txt
+ls -a | wc >> wc.txt
