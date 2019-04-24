@@ -18,7 +18,7 @@ struct Queue q;
 
 void handler(int signum)
 {
-	if(signum == SIGINT)
+	if(signum == SIGQUIT)
 	{
 		/*
 		printf("To quit shell please use ctrl+d\n");
