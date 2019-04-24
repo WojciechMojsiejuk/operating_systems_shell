@@ -416,10 +416,81 @@ void execute(char** command, int tokenCount)
 	printf("%d pipes received\n",howManyPipes);
 	#endif
 	int* fds = (int*)malloc((howManyPipes+isRedirect)*sizeof(int));
+	pid_t* pid = (pid_t*)malloc((howManyPipes+isRedirect)*sizeof(pid_t));
 	int tempToCreatePipes=0;
 	for(tempToCreatePipes=0;tempToCreatePipes<howManyPipes+isRedirect;tempToCreatePipes++)
 	{
 		pipe(fds+2*tempToCreatePipes);
+	}
+	//Exec to stdout or redirect
+	if(howManyPipes == 0)
+	{
+		//ExecToFile
+		if(isRedirect == 1)
+		{
+		}
+		//ExecToStdout
+		else
+		{
+		}
+	}
+	//Atleast one pipe
+	//TODO: error handling
+	else
+	{
+		pid[0] = fork();
+		//First child
+		if(pid[0] == 0)
+		{
+			dup2(fds[1],1);
+			for(int i=0;i<2*(howManyPipes+isRedirect);i++)
+			{
+				close(fds[i]);
+			}
+			char* catArgs[] = {"cat","scores",NULL};
+			int execvpResult = execvp(*catArgs, catArgs);
+		}
+		//Middle childs
+		else
+		{
+			//Loop through middle childs
+			for(int i=0;i<howManyPipes+isRedirect-1;i++)
+			{
+				pid[i] = fork();
+				if(pid[i] == 0)
+				{
+					dup2(fds[1],1);
+					dup2(fds[1],1);
+					//Close all pipes
+					for(int i=0;i<2*(howManyPipes+isRedirect);i++)
+					{
+						close(fds[i]);
+					}
+					char* catArgs[] = {"cat","scores",NULL};
+					int execvpResult = execvp(*catArgs, catArgs);
+				}
+			}
+			//Last child
+			pid[howManyPipes+isRedirect-1] = fork();
+			if(pid[howManyPipes+isRedirect-1] == 0)
+			{
+				#ifdef DEBUG
+				printf("Executing last child...\n");
+				#endif
+			}
+			//Parent process
+			else
+			{
+				for(int i=0;i<2*(howManyPipes+isRedirect);i++)
+				{
+					close(fds[i]);
+				}
+				for(int i=0;i<2*(howManyPipes+isRedirect);i++)
+				{
+					waitpid(pid[i], NULL, 0);
+				}
+			}
+		}
 	}
 	free(tokenType);
 }
