@@ -18,6 +18,8 @@ struct Queue q;
 
 void handler(int signum)
 {
+	// if signal is received flag running is set to 0,
+	// causing main while loop in main function to end
 	if(signum == SIGINT)
 	{
 		running = 0;
@@ -26,16 +28,15 @@ void handler(int signum)
 
 void printCommandPrompt()
 {
-  //buffor do przechowywania ścieżki w której obecnie jest użytkownik
+  //buffer containing user's current path
   char cwd[256];
-  //wyświetlenie ścieżki użytkownika
+  //printing current path
   if (getcwd(cwd, sizeof(cwd)) == NULL)
       perror("getcwd() error");
   else
       printf("%s#", cwd);
 }
 
-//TODO: Finish this function
 //Execvp(with fork), redirects output to other execvp
 void execWithRedirect(char** bufor, int buferSize, char** bufor2, int bufer2Size, int backgroundProcess)
 {
@@ -163,8 +164,6 @@ void execToStdout(char** bufor,int bufferSize, int backgroundProcess)
 		printf("Invalid command\n");
 		return;
 	}
-	//printf("\nEND\n");
-  	//printf("EXEC: %s\n",bufor[0]);
 	pid_t pid;
 	/* Fork a child process. */
 	pid = fork();
@@ -172,7 +171,6 @@ void execToStdout(char** bufor,int bufferSize, int backgroundProcess)
 	if (pid == (pid_t) 0)
 	{
 		/* Replace the child process with our program. */
-		//int execvpResult = execvp (restrictedBuffer[0], restrictedBuffer);
 		int execvpResult = execvp (bufor[0], bufor);
 		if(execvpResult == -1)
 		{
@@ -260,7 +258,6 @@ void execToFile(char** bufor, int buferSize, char* fileName, int backgroundProce
 	/* This is the parent process. */
 	else
 	{
-		//FILE* stream;
 		/* Close our copy of the read end of the file descriptor. */
 		close (fds[0]);
 		close (fds[1]);
@@ -298,7 +295,6 @@ char** getTokens(char* line, int *tokenCount)
   int bufsize = 128, position = 0;
   char **tokens = (char**)malloc(bufsize * sizeof(char*));
   char *token = NULL;
-  //printf("%s\n",line);
   token = strtok(line, delim);
   while (token != NULL)
   {
@@ -310,20 +306,19 @@ char** getTokens(char* line, int *tokenCount)
 		fprintf(stderr, "Make sure command is not too long\n");
 		return NULL;
 	}
+
 	token = strtok(NULL, delim);
   }
 	//Set correct tokenCount
 	*tokenCount = position;
-	////Add NULL value at t
-	//position++;
-	//tokens[position] = NULL;
-//  int i=0;
-//  for(;i<position;i++)
-//  {
-//    printf("%s ",tokens[i]);
-//  }
   return tokens;
 }
+
+// Sets type to each token & fill buffers with them
+// Based on how many pipes, it creates as many child processes to
+// execute commands and redirect results with pipes
+// If there is redirect token to uses function to write final result to file
+// Otherwise it prints results on standard output
 
 void execute(char** command, int tokenCount)
 {
@@ -347,9 +342,9 @@ void execute(char** command, int tokenCount)
 	int howManyPipes=0;
 	//flag to check if >> in command
 	int isRedirect=0;
+
 	//types:
 	//pipe = 1, redirect = 2, parameter = 3, command = 4, backgroundProcess = 5
-
 	for(i=0;i<tokenCount;i++)
 	{
 		//Reset type
@@ -416,7 +411,6 @@ void execute(char** command, int tokenCount)
 	//set all buffers to NULL values
 	int tempBuffers;
 	int tempBuffersIndex;
-	// printf("%d\n %d",howManyPipes+isRedirect+1, tokenCount+1);
 	for(tempBuffers=0;tempBuffers<howManyPipes+isRedirect+1;tempBuffers++)
 	{
 		buffer[tempBuffers]=calloc(tokenCount+1,sizeof(char*));
@@ -425,10 +419,12 @@ void execute(char** command, int tokenCount)
 			buffer[tempBuffers][tempBuffersIndex]=NULL;
 		}
 	}
+
 	//variable showing which buffer is currently filled
 	int whichBufferIsUsed=0;
 	//variable to fill certain buffer
 	int bufferIndex=0;
+
 	//fill buffers
 	for(i=0;i<tokenCount;i++)
 	{
@@ -458,6 +454,7 @@ void execute(char** command, int tokenCount)
 		printf("\n");
 	}
 	#endif
+
 	//create pipes
 	int* fds = (int*)malloc((howManyPipes+isRedirect)*sizeof(int));
 	pid_t* pid = (pid_t*)malloc((howManyPipes+isRedirect+1)*sizeof(pid_t));
@@ -485,7 +482,7 @@ void execute(char** command, int tokenCount)
 		{
 		}
 	}
-	//Atleast one pipe
+	//At least one pipe
 	//TODO: error handling
 	else
 	{
@@ -565,10 +562,6 @@ int main(int argc, char* argv[])
 	{
 		printf("Can't catch SIGQUIT\n");
 	}
-	if(signal(SIGINT, handler) == SIG_ERR)
-	{
-		printf("Can't catch SIGINT\n");
-	}
 	//initialize queue
 	init(&q);
 	//get user home directory
@@ -608,12 +601,6 @@ int main(int argc, char* argv[])
 	printf("Opened file log!\n");
 	while ((read = getline(&line, &len, fp)) > 0)
 	{
-		//initialize queue with values from log file
-		/*size_t length = strlen(line);
-		if((length > 0) && (line[length-1] == '\n'))
-		{
-			line[length-1] ='\0';
-		}*/
 		push(&q,line);
 		#ifdef DEBUG
 		printf("Line from file: %s\n", line);
@@ -632,6 +619,7 @@ fclose(fp);
 #ifdef DEBUG
   printf("Checking if script was launched from different file...\n");
 #endif
+//Shell was not launched from script. It will work as long as user won't quit it
 if(argc==1)
 {
 while(running)
@@ -655,7 +643,6 @@ while(running)
 		fprintf(stderr, "getTokens() failed\n");
 		return 2;
 	}
-	//TODO: FIX THIS
 	#ifdef DEBUG
 	int i;
 	printf("Tokens get: ");
@@ -671,7 +658,7 @@ while(running)
 	//add command to history queue
 	if(current_queue_size(&q)==20)
 	{
-	  //delete old history
+	  //delete old history if queue size is bigger than 20 elements
 	  pop(&q);
 	}
 	if(currentCommand[0] != '\0' && currentCommand[0] != '\n')
@@ -680,6 +667,7 @@ while(running)
 	 free(userResponse);
   }
 }
+//Shell was activated from script
 else
 {
   #ifdef DEBUG
@@ -729,7 +717,6 @@ else
   		fprintf(stderr, "getTokens() failed\n");
   		return 2;
   	}
-  	//TODO: FIX THIS
   	#ifdef DEBUG
   	int i;
   	printf("Tokens get: ");
