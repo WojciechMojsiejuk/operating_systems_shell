@@ -447,7 +447,7 @@ void execute(char** command, int tokenCount)
 			{
 				close(fds[i]);
 			}
-			char* catArgs[] = {"cat","scores",NULL};
+			char* catArgs[] = {"ls",NULL};
 			int execvpResult = execvp(*catArgs, catArgs);
 		}
 		//Middle childs
@@ -459,36 +459,44 @@ void execute(char** command, int tokenCount)
 				pid[i] = fork();
 				if(pid[i] == 0)
 				{
-					dup2(fds[1],1);
-					dup2(fds[1],1);
+					dup2(fds[2*i],0);
+					dup2(fds[2*(i+1)+1],1);
 					//Close all pipes
 					for(int i=0;i<2*(howManyPipes+isRedirect);i++)
 					{
 						close(fds[i]);
 					}
-					char* catArgs[] = {"cat","scores",NULL};
+					char* catArgs[] = {"grep","main",NULL};
 					int execvpResult = execvp(*catArgs, catArgs);
 				}
 			}
-			//Last child
-			pid[howManyPipes+isRedirect-1] = fork();
-			if(pid[howManyPipes+isRedirect-1] == 0)
+		}
+		//Last child
+		pid[howManyPipes+isRedirect-1] = fork();
+		if(pid[howManyPipes+isRedirect-1] == 0)
+		{
+			#ifdef DEBUG
+			printf("Executing last child...\n");
+			#endif
+			//TODO: Set correct fds[]
+			dup2(fds[2],0);
+			for(int i=0;i<2*(howManyPipes+isRedirect);i++)
 			{
-				#ifdef DEBUG
-				printf("Executing last child...\n");
-				#endif
+				close(fds[i]);
 			}
-			//Parent process
-			else
+			char* catArgs[] = {"wc",NULL};
+			int execvpResult = execvp(*catArgs, catArgs);
+		}
+		//Parent process
+		else
+		{
+			for(int i=0;i<2*(howManyPipes+isRedirect);i++)
 			{
-				for(int i=0;i<2*(howManyPipes+isRedirect);i++)
-				{
-					close(fds[i]);
-				}
-				for(int i=0;i<2*(howManyPipes+isRedirect);i++)
-				{
-					waitpid(pid[i], NULL, 0);
-				}
+				close(fds[i]);
+			}
+			for(int i=0;i<2*(howManyPipes+isRedirect);i++)
+			{
+				waitpid(pid[i], NULL, 0);
 			}
 		}
 	}
