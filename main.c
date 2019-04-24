@@ -1,5 +1,5 @@
 #define _GNU_SOURCE
-//#define DEBUG
+#define DEBUG
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -348,8 +348,13 @@ void execute(char** command, int tokenCount)
 		fprintf(stderr,"tokenType memorry error\n");
 		return;
 	}
+	//counts how pipes are in command to execute
+	int howManyPipes=0;
+	//flag to check if >> in command
+	int isRedirect=0;
 	//types:
 	//pipe = 1, redirect = 2, parameter = 3, command = 4, backgroundProcess = 5
+
 	for(i=0;i<tokenCount;i++)
 	{
 		//Reset type
@@ -370,6 +375,7 @@ void execute(char** command, int tokenCount)
 			#ifdef DEBUG
 			printf("Command: %s is |\n",command[i]);
 			#endif
+			howManyPipes++;
 			tokenType[i] = 1;
 		}
 		//>>
@@ -378,6 +384,15 @@ void execute(char** command, int tokenCount)
 			#ifdef DEBUG
 			printf("Command: %s is >>\n",command[i]);
 			#endif
+			if(isRedirect==1)
+			{
+				fprintf(stderr,"Too many redirects in command.Aborting...\n");
+				return;
+			}
+			else
+			{
+				isRedirect=1;
+			}
 			tokenType[i] = 2;
 		}
 		//command
@@ -396,460 +411,16 @@ void execute(char** command, int tokenCount)
 			#endif
 			tokenType[i] = 3;
 		}
-		////Print type
-		//printf("%d\n", tokenType[i]);
 	}
-	//Check if there's a pipe
-	/*for(i=0;i<tokenCount;i++)
+	#ifdef DEBUG
+	printf("%d pipes received\n",howManyPipes);
+	#endif
+	int* fds = (int*)malloc((howManyPipes+isRedirect)*sizeof(int));
+	int tempToCreatePipes=0;
+	for(tempToCreatePipes=0;tempToCreatePipes<howManyPipes+isRedirect;tempToCreatePipes++)
 	{
-		if(tokenType[i] == 1)
-		{
-			printf("Our shell does not support '|' yet\n");
-			free(tokenType);
-			return;
-		}
-	}*/
-	//Check if there's a redirect
-	/*
-	for(i=0;i<tokenCount;i++)
-	{
-		if(tokenType[i] == 2)
-		{
-			printf("Our shell does not support '>>' yet\n");
-			free(tokenType);
-			return;
-		}
-	}*/
-	/*
-	char** first_buffer = (char**)malloc(tokenCount * sizeof(char*));
-	char** second_buffer = (char**)malloc(tokenCount * sizeof(char*));
-	*/
-	char** first_buffer = calloc(tokenCount, sizeof(char*));
-	char** second_buffer = calloc(tokenCount, sizeof(char*));
-	int is_pipe=0; //by default set this flag to false
-	int is_redirect=0;  //by default set this flag to false
-	int j=0; //first_buffer's index
-	int k=0; //second_buffer's index
-	for (i = 0; i < tokenCount; i++)
-	{
-
-		//fill buffers
-		if (tokenType[i]==3 || tokenType[i]==4)
-		{
-			if(is_pipe==0 && is_redirect==0)
-			{
-				#ifdef DEBUG
-				printf("First buffer filled with: %s on index: %d\n",command[i],j);
-				#endif
-				first_buffer[j] = command[i];
-				j++;
-	      		}
-			else
-			{
-				#ifdef DEBUG
-				printf("Second buffer filled with: %s on index: %d\n",command[i],k);
-				#endif
-				second_buffer[k]=command[i];
-				k++;
-			}
-   	 	}
-
-		//if current token is |
-		if(tokenType[i]==1)
-		{
-        		//CASE: a|b|
-        		if(is_pipe==1)
-			{
-		      		//DEBUG CODE
-				/*
-		      		int l;
-		      		printf("DEBUG REDIRECT\n");
-		      		for(l=0;l<tokenCount;l++)
-		      		{
-		      			printf("1: %s", first_buffer[l]);
-		      			printf("2: %s", second_buffer[l]);
-		      		}
-				*/
-		      		//DEBUG END
-				//TODO: Set correct buffors size
-				//Call execWithRedirect function because we reached another pipe
-				#ifdef DEBUG
-				printf("First buffer:");
-				int debugExecWithRedirectIterator;
-				for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<j;debugExecWithRedirectIterator++)
-					printf("%s ",first_buffer[debugExecWithRedirectIterator]);
-				printf("\nSecond buffer:");
-				for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<k;debugExecWithRedirectIterator++)
-					printf("%s ",second_buffer[debugExecWithRedirectIterator]);
-				printf("\nCalling function execWithRedirect...\n");
-				#endif
-
-
-	      			execWithRedirect(first_buffer, j, second_buffer, k, backgroundProcess);
-
-
-				int cleaningBufferIndex;
-				//int swapBufferIterator;
-				#ifdef DEBUG
-				printf("Swapping buffers...\n");
-				#endif
-
-				//Clear first buffer
-				for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
-					first_buffer[cleaningBufferIndex]=NULL;
-				//Swaping all content from second buffer to the first one
-/*				for(swapBufferIterator=0;second_buffer[swapBufferIterator]!=NULL;swapBufferIterator++)
-				{
-					first_buffer[swapBufferIterator]=second_buffer[swapBufferIterator];
-				}
-*/
-				//Clear second buffer
-
-				for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
-					second_buffer[cleaningBufferIndex]=NULL;
-				free(second_buffer);
-				//Set the index of first buffer onto value of second's
-				j=k;
-				//reset index of second buffer
-				k=0;
-				#ifdef DEBUG
-				printf("Checking buffer swapping...\nFirst buffer:");
-				int debugSwapBufferIterator;
-				for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
-					printf("%s ",first_buffer[debugSwapBufferIterator]);
-				printf("\nSecond buffer:");
-				for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
-					printf("%s ",second_buffer[debugSwapBufferIterator]);
-				printf("\nEnd execWithRedirect case...\n");
-				#endif
-			}
-			//CASE: a>>B|
-			if(is_redirect==2)
-			{
-				//Call execWithFile function because we reached pipe
-				#ifdef DEBUG
-				printf("First buffer:");
-				int debugExecWithRedirectIterator;
-				for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<j;debugExecWithRedirectIterator++)
-					printf("%s ",first_buffer[debugExecWithRedirectIterator]);
-				printf("\nSecond buffer:");
-				for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<k;debugExecWithRedirectIterator++)
-					printf("%s ",second_buffer[debugExecWithRedirectIterator]);
-				printf("\nCalling function execWithFile...\n");
-				#endif
-
-
-		  		execToFile(first_buffer, j, second_buffer[0], backgroundProcess);
-
-
-				int cleaningBufferIndex;
-				//int swapBufferIterator;
-				#ifdef DEBUG
-				printf("Swapping buffers...\n");
-				#endif
-				//Clear first buffer
-				for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
-					first_buffer[cleaningBufferIndex]=NULL;
-				//Swaping all content from second buffer to the first one
-	/*			for(swapBufferIterator=0;second_buffer[swapBufferIterator]!=NULL;swapBufferIterator++)
-				{
-					first_buffer[swapBufferIterator]=second_buffer[swapBufferIterator];
-				}
-		*/
-				//Clear second buffer
-
-				for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
-					second_buffer[cleaningBufferIndex]=NULL;
-				free(second_buffer);
-				//Set the index of first buffer onto value of second's
-				j=k;
-				//reset index of second buffer
-				k=0;
-				#ifdef DEBUG
-				printf("Checking buffer swapping...\nFirst buffer:");
-				int debugSwapBufferIterator;
-				for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
-					printf("%s ",first_buffer[debugSwapBufferIterator]);
-				printf("\nSecond buffer:");
-				for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
-					printf("%s ",second_buffer[debugSwapBufferIterator]);
-				printf("\nEnd execWithFile case...\n");
-				#endif
-        		}
-        		//set flag to true, because pipe was found in command
-        		is_pipe=1;
-      		}
-		//if current token is >>
-		else if(tokenType[i]==2)
-		{
-			//CASE: a>>b|
-			if(is_pipe==1)
-			{
-				//Call execWithRedirect function because we reached pipe
-				#ifdef DEBUG
-				printf("First buffer:");
-				int debugExecWithRedirectIterator;
-				for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<j;debugExecWithRedirectIterator++)
-					printf("%s ",first_buffer[debugExecWithRedirectIterator]);
-				printf("\nSecond buffer:");
-				for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<k;debugExecWithRedirectIterator++)
-					printf("%s ",second_buffer[debugExecWithRedirectIterator]);
-				printf("\nCalling function execWithRedirect...\n");
-				#endif
-
-				execWithRedirect(first_buffer,j, second_buffer,k, backgroundProcess);
-
-
-				int cleaningBufferIndex;
-				//int swapBufferIterator;
-				#ifdef DEBUG
-				printf("Swapping buffers...\n");
-				#endif
-				//Clear first buffer
-				for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
-					first_buffer[cleaningBufferIndex]=NULL;
-				//Swaping all content from second buffer to the first one
-	/*			for(swapBufferIterator=0;second_buffer[swapBufferIterator]!=NULL;swapBufferIterator++)
-				{
-					first_buffer[swapBufferIterator]=second_buffer[swapBufferIterator];
-				}
-	*/
-				//Clear second buffer
-
-				for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
-					second_buffer[cleaningBufferIndex]=NULL;
-				free(second_buffer);
-				//Set the index of first buffer onto value of second's
-				j=k;
-				//reset index of second buffer
-				k=0;
-				#ifdef DEBUG
-				printf("Checking buffer swapping...\nFirst buffer:");
-				int debugSwapBufferIterator;
-				for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
-					printf("%s ",first_buffer[debugSwapBufferIterator]);
-				printf("\nSecond buffer:");
-				for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
-					printf("%s ",second_buffer[debugSwapBufferIterator]);
-				printf("\nEnd execWithRedirect case...\n");
-				#endif
-			}
-			if(is_redirect==2)
-			{
-
-				#ifdef DEBUG
-				printf("First buffer:");
-				int debugExecWithRedirectIterator;
-				for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<j;debugExecWithRedirectIterator++)
-					printf("%s ",first_buffer[debugExecWithRedirectIterator]);
-				printf("\nSecond buffer:");
-				for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<k;debugExecWithRedirectIterator++)
-					printf("%s ",second_buffer[debugExecWithRedirectIterator]);
-				printf("\nCalling function execToFile...\n");
-				#endif
-
-				execToFile(first_buffer, j, second_buffer[0], backgroundProcess);
-
-
-				int cleaningBufferIndex;
-				//int swapBufferIterator;
-				#ifdef DEBUG
-				printf("Swapping buffers...\n");
-				#endif
-				//Clear first buffer
-				for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
-					first_buffer[cleaningBufferIndex]=NULL;
-/*
-				//Swaping all content from second buffer to the first one
-				for(swapBufferIterator=0;second_buffer[swapBufferIterator]!=NULL;swapBufferIterator++)
-				{
-					first_buffer[swapBufferIterator]=second_buffer[swapBufferIterator];
-				}
-*/
-				//Clear second buffer
-
-				for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
-					second_buffer[cleaningBufferIndex]=NULL;
-				free(second_buffer);
-				//Set the index of first buffer onto value of second's
-				j=k;
-				//reset index of second buffer
-				k=0;
-				#ifdef DEBUG
-				printf("Checking buffer swapping...\nFirst buffer:");
-				int debugSwapBufferIterator;
-				for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
-					printf("%s ",first_buffer[debugSwapBufferIterator]);
-				printf("\nSecond buffer:");
-				for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
-					printf("%s ",second_buffer[debugSwapBufferIterator]);
-				printf("\nEnd execToFile case...\n");
-				#endif
-			}
-		  	is_redirect=2;
-		}
-
-  	}
-	//if we reached end of command
-
-	//CASE: a|b
-        if(is_pipe==1)
-	{
-		#ifdef DEBUG
-		printf("First buffer:");
-		int debugExecWithRedirectIterator;
-		for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<j;debugExecWithRedirectIterator++)
-			printf("%s ",first_buffer[debugExecWithRedirectIterator]);
-		printf("\nSecond buffer:");
-		for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<k;debugExecWithRedirectIterator++)
-			printf("%s ",second_buffer[debugExecWithRedirectIterator]);
-		printf("\nCalling function execWithRedirect...\n");
-		#endif
-
-
-		execWithRedirect(first_buffer, j, second_buffer, k, backgroundProcess);
-
-
-		int cleaningBufferIndex;
-		//int swapBufferIterator;
-		#ifdef DEBUG
-		printf("Swapping buffers...\n");
-		#endif
-		//Clear first buffer
-				for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
-					first_buffer[cleaningBufferIndex]=NULL;
-/*
-				//Swaping all content from second buffer to the first one
-				for(swapBufferIterator=0;second_buffer[swapBufferIterator]!=NULL;swapBufferIterator++)
-				{
-					first_buffer[swapBufferIterator]=second_buffer[swapBufferIterator];
-				}
-*/
-		//Clear second buffer
-
-		for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
-			second_buffer[cleaningBufferIndex]=NULL;
-		free(second_buffer);
-		//Set the index of first buffer onto value of second's
-		j=k;
-		//reset index of second buffer
-		k=0;
-		#ifdef DEBUG
-		printf("Checking buffer swapping...\nFirst buffer:");
-		int debugSwapBufferIterator;
-		for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
-			printf("%s ",first_buffer[debugSwapBufferIterator]);
-		printf("\nSecond buffer:");
-		for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
-			printf("%s ",second_buffer[debugSwapBufferIterator]);
-		printf("\nEnd execWithRedirect case...\n");
-		#endif
+		pipe(fds+2*tempToCreatePipes);
 	}
-	//CASE a>>b
-	else if(is_redirect==2)
-	{
-		#ifdef DEBUG
-		printf("First buffer:");
-		int debugExecWithRedirectIterator;
-		for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<j;debugExecWithRedirectIterator++)
-			printf("%s ",first_buffer[debugExecWithRedirectIterator]);
-		printf("\nSecond buffer:");
-		for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<k;debugExecWithRedirectIterator++)
-			printf("%s ",second_buffer[debugExecWithRedirectIterator]);
-		printf("\nCalling function execToFile...\n");
-		#endif
-
-		execToFile(first_buffer, j, second_buffer[0], backgroundProcess);
-
-		int cleaningBufferIndex;
-		//int swapBufferIterator;
-		#ifdef DEBUG
-		printf("Swapping buffers...\n");
-		#endif
-		//Clear first buffer
-		for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
-			first_buffer[cleaningBufferIndex]=NULL;
-/*
-		//Swaping all content from second buffer to the first one
-		for(swapBufferIterator=0;second_buffer[swapBufferIterator]!=NULL;swapBufferIterator++)
-		{
-			first_buffer[swapBufferIterator]=second_buffer[swapBufferIterator];
-		}
-*/
-		//Clear second buffer
-
-		for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
-			second_buffer[cleaningBufferIndex]=NULL;
-		free(second_buffer);
-		//Set the index of first buffer onto value of second's
-		j=k;
-		//reset index of second buffer
-		k=0;
-		#ifdef DEBUG
-		printf("Checking buffer swapping...\nFirst buffer:");
-		int debugSwapBufferIterator;
-		for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
-			printf("%s ",first_buffer[debugSwapBufferIterator]);
-		printf("\nSecond buffer:");
-		for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
-			printf("%s ",second_buffer[debugSwapBufferIterator]);
-		printf("\nEnd execToFile case...\n");
-		#endif
-
-	}
-	//CASE a
-	else
-	{
-		#ifdef DEBUG
-		printf("First buffer:");
-		int debugExecWithRedirectIterator;
-		for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<j;debugExecWithRedirectIterator++)
-			printf("%s ",first_buffer[debugExecWithRedirectIterator]);
-		printf("\nSecond buffer:");
-		for(debugExecWithRedirectIterator=0;debugExecWithRedirectIterator<k;debugExecWithRedirectIterator++)
-			printf("%s ",second_buffer[debugExecWithRedirectIterator]);
-		printf("\nCalling function execToStdout...\n");
-		#endif
-
-		execToStdout(first_buffer,i,backgroundProcess);
-
-		int cleaningBufferIndex;
-		//int swapBufferIterator;
-		#ifdef DEBUG
-		printf("Swapping buffers...\n");
-		#endif
-		for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
-			first_buffer[cleaningBufferIndex]=NULL;
-/*
-		//Swaping all content from second buffer to the first one
-		for(swapBufferIterator=0;second_buffer[swapBufferIterator]!=NULL;swapBufferIterator++)
-		{
-			first_buffer[swapBufferIterator]=second_buffer[swapBufferIterator];
-		}
-	*/
-		//Clear second buffer
-
-		for(cleaningBufferIndex=0;cleaningBufferIndex<tokenCount;cleaningBufferIndex++)
-			second_buffer[cleaningBufferIndex]=NULL;
-		free(second_buffer);
-		//Set the index of first buffer onto value of second's
-		j=k;
-		//reset index of second buffer
-		k=0;
-		#ifdef DEBUG
-		printf("Checking buffer swapping...\nFirst buffer:");
-		int debugSwapBufferIterator;
-		for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
-			printf("%s ",first_buffer[debugSwapBufferIterator]);
-		printf("\nSecond buffer:");
-		for(debugSwapBufferIterator=0;debugSwapBufferIterator<tokenCount;debugSwapBufferIterator++)
-			printf("%s ",second_buffer[debugSwapBufferIterator]);
-		printf("\nEnd execToFile case...\n");
-		#endif
-	}
-
-  	//free(first_buffer);
-  	//free(second_buffer);
 	free(tokenType);
 }
 
@@ -973,17 +544,8 @@ while(running)
 	}
 	if(currentCommand[0] != '\0' && currentCommand[0] != '\n')
 		push(&q, currentCommand);
-	  // printf("NIE DZIAŁA");
-		// //Free allocated memory
-	  // //HELP: https://stackoverflow.com/questions/13148119/what-does-pointer-being-freed-was-not-allocated-mean-exactly
-	  // // int freeTokensIndex;
-	  // // for(freeTokensIndex=0;freeTokensIndex<tokenCount;freeTokensIndex++)
-	  // // {
-	  // //   free(tokens[freeTokensIndex]);
-	  // // }
 	 free(tokens);
 	 free(userResponse);
-	// free(currentCommand);
   }
 }
 else
@@ -1070,7 +632,7 @@ fp = fopen(pathToShellLogFile, "w+");
 if(fp == NULL)
 {
 	perror(NULL);
-	exit(EXIT_FAILURE); //CZY TO OK?*/
+	exit(EXIT_FAILURE);
 }
 #ifdef DEBUG
 printf("Current queue: \n");
