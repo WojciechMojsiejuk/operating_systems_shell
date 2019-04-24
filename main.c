@@ -415,6 +415,55 @@ void execute(char** command, int tokenCount)
 	#ifdef DEBUG
 	printf("%d pipes received\n",howManyPipes);
 	#endif
+
+	//create buffers
+	char*** buffer = calloc(howManyPipes+isRedirect+1, sizeof(char**));;
+	//set all buffers to NULL values
+	int tempBuffers;
+	int tempBuffersIndex;
+	// printf("%d\n %d",howManyPipes+isRedirect+1, tokenCount+1);
+	for(tempBuffers=0;tempBuffers<howManyPipes+isRedirect+1;tempBuffers++)
+	{
+		buffer[tempBuffers]=calloc(tokenCount+1,sizeof(char*));
+		for(tempBuffersIndex=0;tempBuffersIndex<tokenCount+1;tempBuffersIndex++)
+		{
+			buffer[tempBuffers][tempBuffersIndex]=NULL;
+		}
+	}
+	//variable showing which buffer is currently filled
+	int whichBufferIsUsed=0;
+	//variable to fill certain buffer
+	int bufferIndex=0;
+	//fill buffers
+	for(i=0;i<tokenCount;i++)
+	{
+		if (tokenType[i]==3 || tokenType[i]==4)
+		{
+			buffer[whichBufferIsUsed][bufferIndex]=command[i];
+			bufferIndex++;
+		}
+		else if (tokenType[i]==1 || tokenType[i]==2)
+		{
+			buffer[whichBufferIsUsed][bufferIndex]=NULL;
+			whichBufferIsUsed++;
+			bufferIndex=0;
+		}
+	}
+	#ifdef DEBUG
+	printf("Printing buffers...\n");
+
+	for(tempBuffers=0;tempBuffers<howManyPipes+isRedirect+1;tempBuffers++)
+	{
+		printf("Buffer %d: ",tempBuffers);
+		tempBuffersIndex=0;
+		for(tempBuffersIndex=0;tempBuffersIndex<tokenCount+1;tempBuffersIndex++)
+		{
+			printf("%s ",buffer[tempBuffers][tempBuffersIndex]);
+		}
+		printf("\n");
+	}
+	#endif
+	//create pipes
 	int* fds = (int*)malloc((howManyPipes+isRedirect)*sizeof(int));
 	int tempToCreatePipes=0;
 	for(tempToCreatePipes=0;tempToCreatePipes<howManyPipes+isRedirect;tempToCreatePipes++)
