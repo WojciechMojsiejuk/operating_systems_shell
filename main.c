@@ -465,12 +465,19 @@ void execute(char** command, int tokenCount)
 	#endif
 	//create pipes
 	int* fds = (int*)malloc((howManyPipes+isRedirect)*sizeof(int));
-	pid_t* pid = (pid_t*)malloc((howManyPipes+isRedirect)*sizeof(pid_t));
+	pid_t* pid = (pid_t*)malloc((howManyPipes+isRedirect+1)*sizeof(pid_t));
 	int tempToCreatePipes=0;
 	for(tempToCreatePipes=0;tempToCreatePipes<howManyPipes+isRedirect;tempToCreatePipes++)
 	{
 		pipe(fds+2*tempToCreatePipes);
 	}
+	#ifdef DEBUG
+	for(int i=0;i<2*(howManyPipes+isRedirect);i++)
+	{
+		printf("Opened descriptor: ");
+		printf("%d \n",fds[i]);
+	}
+	#endif
 	//Exec to stdout or redirect
 	if(howManyPipes == 0)
 	{
@@ -494,6 +501,10 @@ void execute(char** command, int tokenCount)
 			dup2(fds[1],1);
 			for(int i=0;i<2*(howManyPipes+isRedirect);i++)
 			{
+				#ifdef DEBUG
+				printf("Closing descriptor: ");
+				printf("%d \n",fds[i]);
+				#endif
 				close(fds[i]);
 			}
 
@@ -520,8 +531,9 @@ void execute(char** command, int tokenCount)
 			}
 		}
 		//Last child
-		pid[howManyPipes+isRedirect-1] = fork();
-		if(pid[howManyPipes+isRedirect-1] == 0)
+
+		pid[howManyPipes+isRedirect] = fork();
+		if(pid[howManyPipes+isRedirect] == 0)
 		{
 			#ifdef DEBUG
 			printf("Executing last child...\n");
