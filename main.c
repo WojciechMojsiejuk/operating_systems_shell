@@ -531,20 +531,57 @@ void execute(char** command, int tokenCount)
 			}
 		}
 		//Last child
-
 		pid[howManyPipes+isRedirect] = fork();
 		if(pid[howManyPipes+isRedirect] == 0)
 		{
 			#ifdef DEBUG
 			printf("Executing last child...\n");
 			#endif
-			//TODO: Set correct fds[]
+			if(isRedirect == 1)
+			{
+				//Take filename (last or second to last)
+				char* fileName;
+				if(backgroundProcess)
+				{
+					fileName=buffer[howManyPipes+isRedirect-1][0];
+				}
+				else
+				{
+					fileName=buffer[howManyPipes+isRedirect][0];
+				}
+				#ifdef DEBUG
+				printf("Filename: %s\n", fileName);
+				#endif
+				int fd = open(fileName, O_WRONLY | O_CREAT, 0777);
+				if(fd == -1)
+				{
+					perror(fileName);
+					#ifdef DEBUG
+					printf("In Execute(): Problem with file\n");
+					#endif
+					return;
+				}
+				dup2(fd, 1);
+			}
 			dup2(fds[2*(howManyPipes+isRedirect)-2],0);
 			for(int i=0;i<2*(howManyPipes+isRedirect);i++)
 			{
 				close(fds[i]);
 			}
-			int execvpResult = execvp(buffer[howManyPipes+isRedirect][0], buffer[howManyPipes+isRedirect]);
+			int execvpResult;
+			if(isRedirect == 1)
+			{
+				execvpResult = execvp(buffer[howManyPipes+isRedirect-1][0],buffer[howManyPipes+isRedirect-1]);
+			}
+			else
+			{
+				execvpResult = execvp(buffer[howManyPipes+isRedirect][0], buffer[howManyPipes+isRedirect]);
+			}
+			if(execvpResult == -1)
+			{
+				perror("execvp failed\n");
+				return;
+			}
 		}
 		//Parent process
 		else
@@ -553,9 +590,12 @@ void execute(char** command, int tokenCount)
 			{
 				close(fds[i]);
 			}
-			for(int i=0;i<2*(howManyPipes+isRedirect);i++)
+			if(!backgroundProcess)
 			{
-				waitpid(pid[i], NULL, 0);
+				for(int i=0;i<2*(howManyPipes+isRedirect);i++)
+				{
+					waitpid(pid[i], NULL, 0);
+				}
 			}
 		}
 	}
