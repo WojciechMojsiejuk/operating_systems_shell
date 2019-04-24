@@ -1,5 +1,5 @@
 #define _GNU_SOURCE
-#define DEBUG
+//#define DEBUG
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -206,6 +206,7 @@ void execToStdout(char** bufor,int bufferSize, int backgroundProcess)
 void execToFile(char** bufor, int buferSize, char* fileName, int backgroundProcess)
 {
 	#ifdef DEBUG
+	printf("Filename: %s\n", fileName);
 	printf("In execToFile() function\n");
 	printf("\tbuferSize: %d\n", buferSize);
 	printf("\texecToFile() - printing bufor tokens from parameter\n\t");
@@ -486,11 +487,11 @@ void execute(char** command, int tokenCount)
 		{
 			if(backgroundProcess)
 			{
-				execToFile(buffer[0], tokenCount+1, buffer[0][tokenCount-2] , 1);
+				execToFile(buffer[0], tokenCount+1, buffer[1][0] , 1);
 			}
 			else
 			{
-				execToFile(buffer[0], tokenCount+1, buffer[0][tokenCount-1] , 0);
+				execToFile(buffer[0], tokenCount+1, buffer[1][0] , 0);
 			}
 		}
 		//ExecToStdout
