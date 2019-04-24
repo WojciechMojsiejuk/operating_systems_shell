@@ -484,10 +484,19 @@ void execute(char** command, int tokenCount)
 		//ExecToFile
 		if(isRedirect == 1)
 		{
+			//execToFile();
 		}
 		//ExecToStdout
 		else
 		{
+			if(backgroundProcess)
+			{
+				execToStdout(buffer[0],tokenCount+1,1);
+			}
+			else
+			{
+				execToStdout(buffer[0],tokenCount+1,0);
+			}
 		}
 	}
 	//Atleast one pipe
