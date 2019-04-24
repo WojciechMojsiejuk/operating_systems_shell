@@ -1,10 +1,15 @@
-Makefile
-a.out
+.
+..
 a.txt
 c.txt
+d.txt
+.git
+.gitignore
 main.c
 main.o
+Makefile
 mojamuszelka
+mojSkrypt
 muszla
 queue
 queue.c
@@ -14,3 +19,5 @@ requirements.txt
 shell
 skrypt
 tempFile
+wc.txt
+zeSkryptu.txt

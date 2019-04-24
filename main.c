@@ -508,7 +508,6 @@ void execute(char** command, int tokenCount)
 		}
 	}
 	//Atleast one pipe
-	//TODO: error handling
 	else
 	{
 		pid[0] = fork();
@@ -524,8 +523,18 @@ void execute(char** command, int tokenCount)
 				#endif
 				close(fds[i]);
 			}
-
 			int execvpResult = execvp(buffer[0][0], buffer[0]);
+			if(execvpResult == -1)
+			{
+				perror("execvp failed\n");
+				return;
+			}
+		}
+		//error handling
+		else if(pid[0] < 0)
+		{
+			fprintf(stderr, "Fork failed\n");
+			return;
 		}
 		//Middle childs
 		else
@@ -544,6 +553,17 @@ void execute(char** command, int tokenCount)
 						close(fds[i]);
 					}
 					int execvpResult = execvp(buffer[i+1][0], buffer[i+1]);
+					if(execvpResult == -1)
+					{
+						perror("execvp failed\n");
+						return;
+					}
+				}
+				//error handling
+				else if(pid[i] < 0)
+				{
+					fprintf(stderr, "Fork failed\n");
+					return;
 				}
 			}
 		}
@@ -598,6 +618,12 @@ void execute(char** command, int tokenCount)
 				perror("execvp failed\n");
 				return;
 			}
+		}
+		//error handling
+		else if(pid[howManyPipes+isRedirect] < 0)
+		{
+			fprintf(stderr, "Fork failed\n");
+			return;
 		}
 		//Parent process
 		else
