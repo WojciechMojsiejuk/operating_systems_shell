@@ -464,7 +464,7 @@ void execute(char** command, int tokenCount)
 	}
 	#endif
 	//create pipes
-	int* fds = (int*)malloc((howManyPipes+isRedirect)*sizeof(int));
+	int* fds = (int*)malloc(2*(howManyPipes+isRedirect)*sizeof(int));
 	pid_t* pid = (pid_t*)malloc((howManyPipes+isRedirect+1)*sizeof(pid_t));
 	int tempToCreatePipes=0;
 	for(tempToCreatePipes=0;tempToCreatePipes<howManyPipes+isRedirect;tempToCreatePipes++)
@@ -539,7 +539,7 @@ void execute(char** command, int tokenCount)
 			printf("Executing last child...\n");
 			#endif
 			//TODO: Set correct fds[]
-			dup2(fds[2],0);
+			dup2(fds[2*(howManyPipes+isRedirect)-2],0);
 			for(int i=0;i<2*(howManyPipes+isRedirect);i++)
 			{
 				close(fds[i]);
