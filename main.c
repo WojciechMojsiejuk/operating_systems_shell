@@ -20,13 +20,8 @@ void handler(int signum)
 {
 	if(signum == SIGINT)
 	{
-		/*
-		printf("To quit shell please use ctrl+d\n");
-		printf("Terminating\n");
-		*/
 		running = 0;
 	}
-	//exit(signum);
 }
 
 void printCommandPrompt()
