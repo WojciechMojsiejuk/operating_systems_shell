@@ -484,7 +484,14 @@ void execute(char** command, int tokenCount)
 		//ExecToFile
 		if(isRedirect == 1)
 		{
-			//execToFile();
+			if(backgroundProcess)
+			{
+				execToFile(buffer[0], tokenCount+1, buffer[0][tokenCount-2] , 1);
+			}
+			else
+			{
+				execToFile(buffer[0], tokenCount+1, buffer[0][tokenCount-1] , 0);
+			}
 		}
 		//ExecToStdout
 		else
@@ -565,12 +572,11 @@ void execute(char** command, int tokenCount)
 				if(fd == -1)
 				{
 					perror(fileName);
-					#ifdef DEBUG
-					printf("In Execute(): Problem with file\n");
-					#endif
+					printf("In Execute(): Can't open file, aborting command\n");
 					return;
 				}
 				dup2(fd, 1);
+				close(fd);
 			}
 			dup2(fds[2*(howManyPipes+isRedirect)-2],0);
 			for(int i=0;i<2*(howManyPipes+isRedirect);i++)
@@ -826,9 +832,7 @@ printf("Current queue: \n");
 while(front(&q)!=NULL)
 {
 	fprintf(fp,"%s",front(&q));
-	#ifdef DEBUG
 	printf("%s",front(&q));
-	#endif
 	 pop(&q);
 }
 fclose(fp);
