@@ -1,5 +1,5 @@
 #define _GNU_SOURCE
-#define DEBUG
+//#define DEBUG
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -18,10 +18,12 @@ struct Queue q;
 
 void handler(int signum)
 {
-	if(signum == SIGQUIT || signum == SIGINT)
+	if(signum == SIGINT)
 	{
+		/*
 		printf("To quit shell please use ctrl+d\n");
 		printf("Terminating\n");
+		*/
 		running = 0;
 	}
 	//exit(signum);
@@ -147,18 +149,6 @@ void execWithRedirect(char** bufor, int buferSize, char** bufor2, int bufer2Size
 //Execvp (with fork), prints output to stdout
 void execToStdout(char** bufor,int bufferSize, int backgroundProcess)
 {
-/*
-	printf("%d", bufferSize);
-  char** restrictedBuffer=(char**)malloc((bufferSize+1)*sizeof(char*));
-  int i=0;
-  for(;i<bufferSize;i++)
-  {
-    restrictedBuffer[i]=bufor[i];
-	//strcpy(restrictedBuffer[i],bufor[i]);
-  }
-  // strcpy(restrictedBuffer[i],bufor[i]);
-  restrictedBuffer[i+1]=NULL;
-	printf("ALL EXECVP ARGS: \n");*/
 	#ifdef DEBUG
 	printf("In execToStdout() function:\n");
 	printf("\tbuferSize: %d\n", bufferSize);
@@ -170,11 +160,6 @@ void execToStdout(char** bufor,int bufferSize, int backgroundProcess)
 			printf("NULL ");
 		else
 			printf("%s ", bufor[testIter]);
-		//printf("%s ", bufor[tes
-		/*if(restrictedBuffer[testIter] == NULL)
-			printf("NULL ");
-		else
-			printf("%s ", restrictedBuffer[testIter]);*/
 	}
 	printf("\n");
 	#endif
@@ -283,14 +268,6 @@ void execToFile(char** bufor, int buferSize, char* fileName, int backgroundProce
 		//FILE* stream;
 		/* Close our copy of the read end of the file descriptor. */
 		close (fds[0]);
-		// /* Convert the write file descriptor to a FILE object, and write to it. */
-		// stream = fdopen (fds[1], "w");
-		// fprintf (stream, "This is a test.\n");
-		// fprintf (stream, "Hello, world.\n");
-		// fprintf (stream, "My dog has fleas.\n");
-		// fprintf (stream, "This program is great.\n");
-		// fprintf (stream, "One fish, two fish.\n");
-		// fflush (stream);
 		close (fds[1]);
 		/* Wait for the child process to finish (unless there was a & character)*/
 		if(!backgroundProcess)
@@ -308,7 +285,7 @@ char* readLineFromCommandPrompt()
   size_t len = 0;
   char *line = NULL;
 	//getline allocates the buffor (line*), it should be freed even if getline failed
-  read = getline(&line, &len, stdin);
+	read = getline(&line, &len, stdin);
   if( read == -1)
     {
         perror(NULL);
@@ -323,7 +300,7 @@ char* readLineFromCommandPrompt()
 char** getTokens(char* line, int *tokenCount)
 {
 	char* delim = " \t\r\n\a";
-  int bufsize = 64, position = 0;
+  int bufsize = 128, position = 0;
   char **tokens = (char**)malloc(bufsize * sizeof(char*));
   char *token = NULL;
   //printf("%s\n",line);
@@ -332,7 +309,6 @@ char** getTokens(char* line, int *tokenCount)
   {
     tokens[position] = token;
     position++;
-	//TODO: Reallocate memory here
 	if(position >= bufsize)
 	{
 		fprintf(stderr, "getTokens: position out of range\n");
@@ -563,7 +539,6 @@ void execute(char** command, int tokenCount)
 				#endif
 
 
-				//TODO: set valid tokenSize
 		  		execToFile(first_buffer, j, second_buffer[0], backgroundProcess);
 
 
@@ -610,17 +585,6 @@ void execute(char** command, int tokenCount)
 			//CASE: a>>b|
 			if(is_pipe==1)
 			{
-				//DEBUG CODE
-				/*
-				int l;
-				printf("DEBUG REDIRECT\n");
-				for(l=0;l<tokenCount;l++)
-				{
-				printf("1: %s", first_buffer[l]);
-				printf("2: %s", second_buffer[l]);
-				}
-				*/
-				//DEBUG END
 				//Call execWithRedirect function because we reached pipe
 				#ifdef DEBUG
 				printf("First buffer:");
@@ -731,19 +695,6 @@ void execute(char** command, int tokenCount)
 	//CASE: a|b
         if(is_pipe==1)
 	{
-		//DEBUG CODE
-			/*
-		int l;
-		printf("DEBUG REDIRECT\n");
-		for(l=0;l<tokenCount;l++)
-		{
-			printf("1: %s", first_buffer[l]);
-			printf("2: %s", second_buffer[l]);
-		}
-			*/
-		//DEBUG END
-		//wywolaj funkcje bo doszlismy do drugiego pipe'a
-			//TODO: Set valid buffers size
 		#ifdef DEBUG
 		printf("First buffer:");
 		int debugExecWithRedirectIterator;
@@ -990,8 +941,6 @@ while(running)
 	//EOF character
 	if(userResponse == NULL)
 	{
-		//fprintf(stderr, "readLineFromCommandPrompt() failed\n");
-		//printf("EOF?\n");
 		break;
 	}
 	char* currentCommand=malloc(strlen(userResponse)+1);
@@ -1022,7 +971,8 @@ while(running)
 	  //delete old history
 	  pop(&q);
 	}
-	  push(&q, currentCommand);
+	if(currentCommand[0] != '\0' && currentCommand[0] != '\n')
+		push(&q, currentCommand);
 	  // printf("NIE DZIAŁA");
 		// //Free allocated memory
 	  // //HELP: https://stackoverflow.com/questions/13148119/what-does-pointer-being-freed-was-not-allocated-mean-exactly
