@@ -1,15 +1,15 @@
-a.txt
-c.txt
-main.c
-main.o
-Makefile
-mojamuszelka
-muszla
-queue
-queue.c
-queue.h
-queue.o
-requirements.txt
-shell
-skrypt
-tempFile
+total 120
+-rwxr-xr-x 1 root root   118 kwi 24 19:09 a.txt
+-rwxr-xr-x 1 root root 18378 kwi 24 19:09 main.c
+-rw-r--r-- 1 root root 20752 kwi 24 19:09 main.o
+-rw-r--r-- 1 kuba kuba   126 kwi 10 10:57 Makefile
+-rwxr-xr-x 1 root root    96 kwi 24 05:29 mojamuszelka
+-rwxr-xr-x 1 root root    59 kwi 16 15:34 muszla
+-rwxr-xr-x 1 root root  8736 kwi 16 15:35 queue
+-rw-r--r-- 1 root root  1178 kwi 12 11:33 queue.c
+-rw-r--r-- 1 root root   421 kwi 10 11:13 queue.h
+-rw-r--r-- 1 root root  2856 kwi 24 19:06 queue.o
+-rw-r--r-- 1 root root  1420 kwi 10 09:55 requirements.txt
+-rwxr-xr-x 1 root root 22504 kwi 24 19:09 shell
+-rwxr-xr-x 1 root root    42 kwi 16 15:34 skrypt
+-rwxr-xr-x 1 root root    64 kwi 16 15:35 tempFile

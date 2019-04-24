@@ -1,0 +1,35 @@
+AFTER EXECUTE() FUNCTION
+BEGINNING SHELL LOOP
+/home/kuba/Desktop/operating_systems_shell#Tokens get: 21 158 905 
+Command to execute: 0: 21 1: 158 2: 905 
+TokenCount: 3
+Command: 21 is a shell command
+Command: 158 is a command parameter
+Command: 905 is a command parameter
+0 pipes received
+Printing buffers...
+Buffer 0: 21 158 905 (null) 
+AFTER EXECUTE() FUNCTION
+BEGINNING SHELL LOOP
+/home/kuba/Desktop/operating_systems_shell#After main loop
+Current queue: 
+ls -l | grep main | wc
+ls -l | grep main | wc | less
+ls -l | wc &
+ls -l | wc &
+ls -l | grep main | wc &
+./shell
+ls -l | grep main | wc
+ls -l | grep main | wc &
+ls -l | grep main
+ls -l | grep main >> a.txt
+ls
+ls -l | grep main
+ls -l | grep main >> a.txt
+ls
+ls -l | grep main >> a.txt
+ls -l | grep main >> a.txt
+ls -l | grep main >> a.txt
+ls -l | wc >> a.txt
+ls -l | wc >> aa.txt
+     21     158     905

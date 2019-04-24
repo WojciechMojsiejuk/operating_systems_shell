@@ -1,0 +1,58 @@
+AFTER EXECUTE() FUNCTION
+BEGINNING SHELL LOOP
+/home/kuba/Desktop/operating_systems_shell#Tokens get: -rwxr-xr-x 1 root root 17649 kwi 24 17:10 main.c 
+Command to execute: 0: -rwxr-xr-x 1: 1 2: root 3: root 4: 17649 5: kwi 6: 24 7: 17:10 8: main.c 
+TokenCount: 9
+Command: -rwxr-xr-x is a shell command
+Command: 1 is a command parameter
+Command: root is a command parameter
+Command: root is a command parameter
+Command: 17649 is a command parameter
+Command: kwi is a command parameter
+Command: 24 is a command parameter
+Command: 17:10 is a command parameter
+Command: main.c is a command parameter
+0 pipes received
+Printing buffers...
+Buffer 0: -rwxr-xr-x 1 root root 17649 kwi 24 17:10 main.c (null) 
+AFTER EXECUTE() FUNCTION
+BEGINNING SHELL LOOP
+/home/kuba/Desktop/operating_systems_shell#Tokens get: -rw-r--r-- 1 root root 19960 kwi 24 17:10 main.o 
+Command to execute: 0: -rw-r--r-- 1: 1 2: root 3: root 4: 19960 5: kwi 6: 24 7: 17:10 8: main.o 
+TokenCount: 9
+Command: -rw-r--r-- is a shell command
+Command: 1 is a command parameter
+Command: root is a command parameter
+Command: root is a command parameter
+Command: 19960 is a command parameter
+Command: kwi is a command parameter
+Command: 24 is a command parameter
+Command: 17:10 is a command parameter
+Command: main.o is a command parameter
+0 pipes received
+Printing buffers...
+Buffer 0: -rw-r--r-- 1 root root 19960 kwi 24 17:10 main.o (null) 
+AFTER EXECUTE() FUNCTION
+BEGINNING SHELL LOOP
+/home/kuba/Desktop/operating_systems_shell#After main loop
+Current queue: 
+cat main.c | wc
+ls -l | grep main | wc | less
+ls -l | grep main | wc
+ls -l | grep main | wc
+ls -l | grep main | wc
+ls -l | grep main | wc | less
+ls -l | grep main | wc
+ls -l | wc
+ls -l | grep main | wc
+ls -l | grep main | wc | less
+ls -l | wc &
+ls -l | wc &
+ls -l | grep main | wc &
+./shell
+ls -l | grep main | wc
+ls -l | grep main | wc &
+ls -l | grep main
+ls -l | grep main >> a.txt
+-rwxr-xr-x 1 root root 17649 kwi 24 17:10 main.c
+-rw-r--r-- 1 root root 19960 kwi 24 17:10 main.o
